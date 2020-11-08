@@ -40,6 +40,30 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-38",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "bang" ],
+					"patching_rect" : [ 685.5, 334.0, 31.0, 22.0 ],
+					"text" : "t s b"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-37",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 697.5, 405.0, 43.0, 22.0 ],
+					"text" : "zlclear"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"comment" : "Note duration",
 					"id" : "obj-13",
 					"index" : 2,
@@ -806,7 +830,7 @@
 					"outlettype" : [ "int", "", "" ],
 					"parameter_enable" : 0,
 					"patching_rect" : [ 645.0, 240.0, 100.0, 22.0 ],
-					"prefix" : "~/Music/Ableton/User Library/Presets/MIDI Effects/Max MIDI Effect/edv.midi-patterner/",
+					"prefix" : "~/personal/repo/ableton/edv/patterner/edv.midi-patterner/",
 					"presentation" : 1,
 					"presentation_rect" : [ 185.0, 14.5, 100.0, 22.0 ]
 				}
@@ -1536,6 +1560,29 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-5", 0 ],
+					"midpoints" : [ 707.0, 459.0, 492.0, 459.0, 492.0, 459.0, 474.5, 459.0 ],
+					"source" : [ "obj-37", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-37", 0 ],
+					"source" : [ "obj-38", 1 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-95", 0 ],
+					"midpoints" : [ 695.0, 390.0, 474.5, 390.0 ],
+					"source" : [ "obj-38", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-32", 0 ],
 					"midpoints" : [ 9.5, 76.0, 114.5, 76.0 ],
 					"source" : [ "obj-4", 0 ]
@@ -1580,8 +1627,7 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-95", 0 ],
-					"midpoints" : [ 695.0, 390.0, 474.5, 390.0 ],
+					"destination" : [ "obj-38", 0 ],
 					"source" : [ "obj-58", 0 ]
 				}
 
