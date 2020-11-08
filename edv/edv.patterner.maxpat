@@ -40,6 +40,30 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-11",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "bang", "bang" ],
+					"patching_rect" : [ 555.0, 150.0, 32.0, 22.0 ],
+					"text" : "t b b"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-5",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "bang" ],
+					"patching_rect" : [ 555.0, 105.0, 58.0, 22.0 ],
+					"text" : "loadbang"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-21",
 					"maxclass" : "button",
 					"numinlets" : 1,
@@ -108,7 +132,6 @@
 						"style" : "",
 						"subpatcher_template" : "",
 						"assistshowspatchername" : 0,
-						"visible" : 1,
 						"boxes" : [ 							{
 								"box" : 								{
 									"id" : "obj-24",
@@ -772,7 +795,7 @@
 				"box" : 				{
 					"id" : "obj-66",
 					"maxclass" : "newobj",
-					"numinlets" : 0,
+					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patcher" : 					{
@@ -864,13 +887,14 @@
 							}
 , 							{
 								"box" : 								{
+									"comment" : "",
 									"id" : "obj-26",
-									"maxclass" : "newobj",
-									"numinlets" : 1,
+									"index" : 1,
+									"maxclass" : "inlet",
+									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "bang" ],
-									"patching_rect" : [ 15.0, 15.0, 58.0, 22.0 ],
-									"text" : "loadbang"
+									"patching_rect" : [ 15.0, 15.0, 30.0, 30.0 ]
 								}
 
 							}
@@ -971,7 +995,7 @@
  ]
 					}
 ,
-					"patching_rect" : [ 540.0, 180.0, 87.0, 22.0 ],
+					"patching_rect" : [ 585.0, 195.0, 87.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"description" : "",
 						"digest" : "",
@@ -1230,7 +1254,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 580.5, 270.0, 80.0, 22.0 ],
+					"patching_rect" : [ 580.5, 300.0, 80.0, 22.0 ],
 					"text" : "prepend read"
 				}
 
@@ -1239,14 +1263,14 @@
 				"box" : 				{
 					"autopopulate" : 1,
 					"id" : "obj-49",
-					"items" : [ "arpeggio.txt", ",", "comptine.txt", ",", "README.md" ],
+					"items" : [ "arpeggio.txt", ",", "comptine.txt" ],
 					"maxclass" : "umenu",
 					"numinlets" : 1,
 					"numoutlets" : 3,
 					"outlettype" : [ "int", "", "" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 540.0, 225.0, 100.0, 22.0 ],
-					"prefix" : "~/personal/repo/ableton/edv/patterner/edv.midi-patterner/",
+					"patching_rect" : [ 540.0, 255.0, 100.0, 22.0 ],
+					"prefix" : "~/personal/repo/ableton/edv/edv.midi-patterner/",
 					"presentation" : 1,
 					"presentation_rect" : [ 185.0, 14.5, 100.0, 22.0 ]
 				}
@@ -1645,6 +1669,20 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-49", 0 ],
+					"source" : [ "obj-11", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-66", 0 ],
+					"source" : [ "obj-11", 1 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-64", 1 ],
 					"source" : [ "obj-119", 1 ]
 				}
@@ -1828,6 +1866,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-58", 0 ],
 					"source" : [ "obj-49", 1 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-11", 0 ],
+					"source" : [ "obj-5", 0 ]
 				}
 
 			}
