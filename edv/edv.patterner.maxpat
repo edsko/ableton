@@ -1272,7 +1272,7 @@
 					"patching_rect" : [ 540.0, 255.0, 100.0, 22.0 ],
 					"prefix" : "~/personal/repo/ableton/edv/edv.midi-patterner/",
 					"presentation" : 1,
-					"presentation_rect" : [ 185.0, 14.5, 100.0, 22.0 ]
+					"presentation_rect" : [ 7.0, 86.5, 88.0, 22.0 ]
 				}
 
 			}
