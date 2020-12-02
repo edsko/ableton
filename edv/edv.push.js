@@ -48,11 +48,16 @@ function find_push() {
     post("Found the push!\n");
   }
 
-  buttonMatrix = new LiveAPI(null, push.call("get_control", "Button_Matrix"));
+  buttonMatrix = new LiveAPI(live_api_callback, push.call("get_control", "Button_Matrix"));
   if(buttonMatrix == null) {
     post("Button matrix not found :(\n");
   } else {
     post("Found the button matrix!\n");
+    // Invoke the callback every time the value changes
+    // (allows us to see when buttons are pressed)
+    buttonMatrix.property = "value";
+    post(buttonMatrix.info);
+    post();
   }
 
 /*
@@ -79,8 +84,11 @@ function find_push() {
 function grab() {
   post("grabbing..\n");
   // Using just the name works fine as well
-//  push.call("grab_control", "id", buttonMatrix.id);
+  //  push.call("grab_control", "id", buttonMatrix.id);
   push.call("grab_control", "Button_Matrix");
+
+  // Set the color in column 0, row 5 to 10
+  buttonMatrix.call("send_value", 0, 5, 10);
 }
 
 function release() {
@@ -105,5 +113,5 @@ function init() {
 }
 
 function live_api_callback(args) {
-  // post("callback called with arguments:", args, "\n")
+  post("callback called with arguments:", args, "\n")
 }
