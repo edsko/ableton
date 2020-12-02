@@ -25,6 +25,14 @@ function bang() {
 }
 
 /**
+ * Task for the background animation
+ *
+ * TODO: We should synchronize this to the clock.
+ */
+var bgAnimTask = new Task(updateBgAnim, this);
+bgAnimTask.interval = 250;
+
+/**
  * Find the Push2 controller
  *
  * Should be called when the Max device is fully loaded; use
@@ -56,8 +64,8 @@ function find_push() {
     // Invoke the callback every time the value changes
     // (allows us to see when buttons are pressed)
     buttonMatrix.property = "value";
-    post(buttonMatrix.info);
-    post();
+    //post(buttonMatrix.info);
+    //post();
   }
 
 /*
@@ -87,12 +95,12 @@ function grab() {
   //  push.call("grab_control", "id", buttonMatrix.id);
   push.call("grab_control", "Button_Matrix");
 
-  // Set the color in column 0, row 5 to 10
-  buttonMatrix.call("send_value", 0, 5, 10);
+  startBgAnim();
 }
 
 function release() {
   post("releasing..\n");
+  stopBgAnim();
   push.call("release_control", "id", buttonMatrix.id);
 }
 
@@ -115,3 +123,116 @@ function init() {
 function live_api_callback(args) {
   post("callback called with arguments:", args, "\n")
 }
+
+/*******************************************************************************
+  Background animation
+*******************************************************************************/
+
+/**
+ * The animation data
+ */
+var bgAnim = [
+    [ [2, 2, 11], [5, 2, 11], [5, 5, 11], [2, 5, 11] ]
+  , [ [3, 2, 10] ]
+  , [ [4, 2, 10] ]
+  , [ [2, 2, 12], [5, 2, 12], [5, 5, 12], [2, 5, 12] ]
+  , [ [5, 3, 10] ]
+  , [ [5, 4, 10] ]
+  , [ [2, 2, 13], [5, 2, 13], [5, 5, 13], [2, 5, 13] ]
+  , [ [4, 5, 10] ]
+  , [ [3, 5, 10] ]
+  , [ [2, 2, 14], [5, 2, 14], [5, 5, 14], [2, 5, 14] ]
+  , [ [2, 4, 10] ]
+  , [ [2, 3, 10] ]
+];
+
+/**
+ * Current index into the animation
+ */
+var bgAnimIndex = null;
+
+/**
+ * Current state of the buttons (8x8 array containing button colors)
+ */
+var bgAnimCurrent = null;
+
+/**
+ * Start the animation
+ */
+function startBgAnim() {
+  bgAnimIndex   = 0;
+  bgAnimCurrent = mkEmptyFrame();
+  bgAnimTask.repeat();
+}
+startBgAnim.local = 1;
+
+/**
+ * Stop the animation
+ */
+function stopBgAnim() {
+  bgAnimTask.cancel();
+}
+stopBgAnim.local = 1;
+
+/**
+ * Create an empty frame
+ *
+ * Returns a 8x8 2D matrix.
+ */
+function mkEmptyFrame() {
+  var frame = new Array();
+  for(var i = 0; i < 8; i++) {
+    var col = new Array();
+    frame[i] = col;
+
+    for(var j = 0; j < 8; j++) {
+      col[j] = 0;
+    }
+  }
+
+  return frame;
+}
+mkEmptyFrame.local = 1;
+
+/**
+ * Construct a frame from a series of instructions
+ *
+ * Each instruction should be a a list of 3 elements: row, column, color.
+ */
+function constructFrame(instructions) {
+  var frame = mkEmptyFrame();
+
+  for(var i in instructions) {
+    var instruction = instructions[i];
+    frame[instruction[0]][instruction[1]] = instruction[2];
+  }
+
+  return frame;
+}
+constructFrame.local = 1;
+
+/**
+ * Update the state of the push
+ */
+function updateFrame(newFrame) {
+  for(var i = 0; i < 8; i++) {
+    for(var j = 0; j < 8; j++) {
+      var oldColor = bgAnimCurrent[i][j];
+      var newColor = newFrame[i][j];
+      if(oldColor != newColor) {
+        buttonMatrix.call("send_value", i, j, newColor);
+        bgAnimCurrent[i][j] = newColor;
+      }
+    }
+  }
+}
+updateFrame.local = 1;
+
+/**
+ * Call-back used to update the animation
+ */
+function updateBgAnim(args) {
+  updateFrame(constructFrame(bgAnim[bgAnimIndex]));
+  bgAnimIndex = (bgAnimIndex + 1) % bgAnim.length;
+}
+updateBgAnim.local = 1;
