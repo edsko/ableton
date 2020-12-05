@@ -87,29 +87,36 @@ function grab() {
   // Using just the name works fine as well
   //  push.call("grab_control", "id", buttonMatrix.id);
   push.call("grab_control", "Button_Matrix");
-  anim.start();
+  // anim.start();
+}
+
+function hi() {
+  post("hi!\n");
 }
 
 function release() {
   post("releasing..\n");
-  anim.stop();
+  // anim.stop();
   push.call("release_control", "id", buttonMatrix.id);
 }
 
-/**
- * Initialize the patcher
- *
- * Use the 'live.thisdevice' object to determine when your Max Device has
- * completely loaded; the object sends a 'bang' from its left outlet when the
- * device is fully initialized (including the Live API). The 'init' message
- * should be sent in response to that 'bang'.
- */
 function init() {
-  if(api == null) {
-    post("Initialising..\n");
-    api = new LiveAPI(live_api_callback);
-    post("Initialisation done.\n");
-  }
+  find_push();
+
+  var track = new LiveAPI(null, "this_device canonical_parent");
+  post("our track ID: " + track.id + "\n");
+
+  var view = new LiveAPI(function(args) {
+    if(args[0] == "selected_track") {
+      if (track.id == args[2]) {
+       grab();
+      } else {
+       release();
+      }
+    }
+  });
+  view.path     = "live_set view";
+  view.property = "selected_track";
 }
 
 function live_api_callback(args) {
