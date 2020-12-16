@@ -43,13 +43,20 @@ function init() {
   if(ourTrack.isSelected()) push.grab();
 }
 
+function grab() {
+  push.grab();
+}
+
+function release() {
+  push.release();
+}
+
 /*******************************************************************************
   Private functions
 *******************************************************************************/
 
 function buttonPressed(args) {
-  post("pressed", args.velocity, args.col, args.row);
-  post();
+  push.setColor(args.col, args.row, 10);
 }
 buttonPressed.local = 1;
 

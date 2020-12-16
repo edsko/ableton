@@ -20,19 +20,19 @@
  */
 exports.OurTrack = function(callback) {
   var track    = new LiveAPI(null, "this_device canonical_parent");
-  var ourTrack = this;
 
   // Register a callback to be run every time the selected track changes
   // We make it part of 'this' so that its lifetime is tied to ours;
   // if we didn't, the callback would not be called anymore the moment we leave
   // the scope of this constructor).
+  outerThis = this;
   this.view = new LiveAPI(function(args) {
     if(args[0] == "selected_track") {
       if (track.id == args[2]) {
-        ourTrack.selected = true;
+        outerThis.selected = true;
         callback(true);
       } else {
-        ourTrack.selected = false;
+        outerThis.selected = false;
         callback(false);
       }
     }

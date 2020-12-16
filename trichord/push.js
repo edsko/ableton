@@ -9,6 +9,13 @@
  */
 
 /*******************************************************************************
+  Imports
+*******************************************************************************/
+
+var ButtonMatrix = require("buttonmatrix").ButtonMatrix;
+var ColorGrid    = require("colorgrid").ColorGrid;
+
+/*******************************************************************************
   Public API
 *******************************************************************************/
 
@@ -21,6 +28,7 @@ exports.Push = function(buttonPressed) {
   // We cannot locate the Push until the Max device is fully initialized
   this.controller    = null;
   this.buttonPressed = buttonPressed;
+  this.colorGrid     = new ColorGrid(8, 8);
 };
 
 /**
@@ -37,13 +45,8 @@ exports.Push.prototype = {
     this.controller = findPush();
     if(this.controller == null) return;
 
-    var buttonPressed = this.buttonPressed;
-    this.buttonMatrix = findButtonMatrix(this.controller, function(args) {
-      // Careful: 'this' inside here is a different 'this'!
-      if(args[0] == "value" && args.length == 5) {
-        buttonPressed({"velocity": args[1], "col": args[2], "row": args[3]});
-      }
-    });
+    var outerThis = this;
+    this.buttonMatrix = new ButtonMatrix(this.controller, this.buttonPressed);
   }
 
   /**
@@ -59,6 +62,11 @@ exports.Push.prototype = {
 , grab: function() {
     if(!this.checkFound()) return;
     this.controller.call("grab_control", "Button_Matrix");
+
+    var outerThis = this;
+    this.colorGrid.traverse(function(col, row, color) {
+      outerThis.buttonMatrix.setColor(col, row, color);
+    });
   }
 
   /**
@@ -67,6 +75,15 @@ exports.Push.prototype = {
 , release: function() {
     if(!this.checkFound()) return;
     this.controller.call("release_control", "Button_Matrix");
+  }
+
+  /**
+   * Set the color of one of the buttons
+   */
+, setColor: function(col, row, color) {
+    if(!this.checkFound()) return;
+    this.colorGrid.setColor(col, row, color);
+    this.buttonMatrix.setColor(col, row, color);
   }
 };
 
@@ -91,14 +108,4 @@ function findPush() {
   }
 
   return null;
-}
-
-/**
- * Find the button matrix on the Push2 controller
- */
-function findButtonMatrix(push, callback) {
-  var buttonMatrixId = push.call("get_control", "Button_Matrix");
-  var buttonMatrix   = new LiveAPI(callback, buttonMatrixId);
-  buttonMatrix.property = "value"; // Monitor the buttons
-  return buttonMatrix;
 }
