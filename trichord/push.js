@@ -22,13 +22,14 @@ var ColorGrid    = require("colorgrid").ColorGrid;
 /**
  * Constructor
  *
+ * Should not be called until the M4L device is fully initialized.
+ *
  * @param buttonPressed Callback invoked when a button is pressed or released
  */
 exports.Push = function(buttonPressed) {
-  // We cannot locate the Push until the Max device is fully initialized
-  this.controller    = null;
-  this.buttonPressed = buttonPressed;
-  this.colorGrid     = new ColorGrid(8, 8);
+  this.controller   = findPush();
+  this.colorGrid    = new ColorGrid(8, 8);
+  this.buttonMatrix = new ButtonMatrix(this.controller, buttonPressed);
 };
 
 /**
@@ -36,23 +37,9 @@ exports.Push = function(buttonPressed) {
  */
 exports.Push.prototype = {
   /**
-   * Locate the Push controller
-   *
-   * Should be called when the Max live is fully loaded; use 'live.thisdevice'.
-   */
-  init: function() {
-    if(this.controller != null) return;
-    this.controller = findPush();
-    if(this.controller == null) return;
-
-    var outerThis = this;
-    this.buttonMatrix = new ButtonMatrix(this.controller, this.buttonPressed);
-  }
-
-  /**
    * Return if the Push2 controller was found
    */
-, checkFound: function() {
+  checkFound: function() {
     return (this.controller != null);
   }
 

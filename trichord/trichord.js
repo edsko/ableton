@@ -22,15 +22,15 @@ var OurTrack = require("ourtrack").OurTrack;
   Global variables
 *******************************************************************************/
 
-var push     = new Push(buttonPressed);
-var ourTrack = new OurTrack(ourTrackSelected);
+var push     = null;
+var ourTrack = null;
 
 /*******************************************************************************
   Handle M4L messages
 *******************************************************************************/
 
 /**
- * Find the Push controller
+ * Initialize the device.
  *
  * Should be called when the M4L device is fully loaded (use 'live.thisdevice').
  *
@@ -39,7 +39,9 @@ var ourTrack = new OurTrack(ourTrackSelected);
  * M4L device ('trichord.amxd').
  */
 function init() {
-  push.init();
+  push     = new Push(buttonPressed);
+  ourTrack = new OurTrack(ourTrackSelected);
+
   if(ourTrack.isSelected()) push.grab();
 }
 

@@ -15,6 +15,8 @@
 /**
  * Constructor
  *
+ * Should not be called until the M4L device is fully initialized.
+ *
  * @param callback Function called whenever the selected track changes
  *                 Gets passed an argument telling it if our track was selected.
  */
