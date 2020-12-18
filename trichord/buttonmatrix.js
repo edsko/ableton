@@ -30,8 +30,21 @@ exports.ButtonMatrix = function(push, callback) {
  * Class
  */
 exports.ButtonMatrix.prototype = {
+  /**
+   * Set the color of one of the buttons
+   */
   setColor: function(col, row, color) {
     this.buttonMatrix.call("send_value", col, row, color);
+  }
+
+  /**
+   * Delete all callbacks.
+   *
+   * This will cause the ButtonMatrix to stop listening for key presses
+   * Should should be called before the button matrix falls out of scope.
+   */
+, deleteCallbacks: function() {
+    this.buttonMatrix.property = "";
   }
 }
 

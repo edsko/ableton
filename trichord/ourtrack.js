@@ -21,7 +21,8 @@
  *                 Gets passed an argument telling it if our track was selected.
  */
 exports.OurTrack = function(callback) {
-  var track    = new LiveAPI(null, "this_device canonical_parent");
+  var track   = new LiveAPI(null, "this_device canonical_parent");
+  var trackId = track.id;
 
   // Register a callback to be run every time the selected track changes
   // We make it part of 'this' so that its lifetime is tied to ours;
@@ -30,7 +31,7 @@ exports.OurTrack = function(callback) {
   outerThis = this;
   this.view = new LiveAPI(function(args) {
     if(args[0] == "selected_track") {
-      if (track.id == args[2]) {
+      if (args[2] == trackId) {
         outerThis.selected = true;
         callback(true);
       } else {
@@ -52,5 +53,20 @@ exports.OurTrack.prototype = {
    */
   isSelected: function() {
     return this.selected;
+  }
+
+  /**
+   * Delete all callbacks.
+   *
+   * This means we will stop watching the track.
+   *
+   * It is important to call this function before allowing the object to
+   * fall out of scope, otherwise the view and its callback will continue
+   * to keep each other alive.
+   *
+   * @see {@link https://cycling74.com/forums/how-to-destroy-a-liveapi-object-instantiated-in-js} for more information.
+   */
+, deleteCallbacks: function() {
+    this.view.property = ""; // null does not work!
   }
 };

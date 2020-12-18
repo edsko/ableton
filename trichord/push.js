@@ -50,10 +50,11 @@ exports.Push.prototype = {
     if(!this.checkFound()) return;
     this.controller.call("grab_control", "Button_Matrix");
 
-    var outerThis = this;
-    this.colorGrid.traverse(function(col, row, color) {
-      outerThis.buttonMatrix.setColor(col, row, color);
-    });
+    // We initialize the colors after a short delay. If we do not, switching
+    // between tracks works just fine within Ableton itself, but for some reason
+    // it does not work if we switch track using the buttons on the Push.
+    var initColorsTask = new Task(initColors, this);
+    initColorsTask.schedule(0);
   }
 
   /**
@@ -71,6 +72,13 @@ exports.Push.prototype = {
     if(!this.checkFound()) return;
     this.colorGrid.setColor(col, row, color);
     this.buttonMatrix.setColor(col, row, color);
+  }
+
+  /**
+   * Delete all callbacks.
+   */
+, deleteCallbacks: function() {
+    this.buttonMatrix.deleteCallbacks();
   }
 };
 
@@ -95,4 +103,14 @@ function findPush() {
   }
 
   return null;
+}
+
+/**
+ * Initialize the colors of the button matrix after grabbing control
+ */
+function initColors() {
+  var outerThis = this;
+  this.colorGrid.traverse(function(col, row, color) {
+    outerThis.buttonMatrix.setColor(col, row, color);
+  });
 }

@@ -39,11 +39,20 @@ var ourTrack = null;
  * M4L device ('trichord.amxd').
  */
 function init() {
+  if(push     != null) push.deleteCallbacks();
+  if(ourTrack != null) ourTrack.deleteCallbacks();
+
   push     = new Push(buttonPressed);
   ourTrack = new OurTrack(ourTrackSelected);
-
-  if(ourTrack.isSelected()) push.grab();
 }
+
+function loadbang() {
+  post("this is loadbang!\n");
+}
+
+// TODO:
+// https://cycling74.com/forums/does-anyone-know-when-these-messages-occur
+// Talks about loadbang versus live.thisdevice, as well as closebang/savebang
 
 function grab() {
   push.grab();
