@@ -44,6 +44,23 @@ function init() {
 
   push     = new Push(buttonPressed);
   ourTrack = new OurTrack(ourTrackSelected);
+
+  push.setColor(0, 2, 65);
+  push.setColor(0, 3, 69);
+  push.setColor(0, 4, 4);
+  push.setColor(0, 5, 2);
+
+  push.setColor(7, 2, 65 + 8);
+  push.setColor(7, 3, 69 + 8);
+  push.setColor(7, 4, 4  + 8);
+  push.setColor(7, 5, 2  + 8);
+
+  push.setColor(1, 4, 64); // C
+  push.setColor(2, 4, 64); // C#/D/D#/E
+  push.setColor(3, 4, 64); // F
+  push.setColor(4, 4, 64); // G
+  push.setColor(5, 4, 64); // G#/A/A#/B
+  push.setColor(6, 4, 64); // C
 }
 
 function loadbang() {
@@ -62,12 +79,16 @@ function release() {
   push.release();
 }
 
+function showColors(page) {
+  push.showColors(page);
+}
+
 /*******************************************************************************
   Private functions
 *******************************************************************************/
 
 function buttonPressed(args) {
-  push.setColor(args.col, args.row, 10);
+  // push.setColor(args.col, args.row, 10);
 }
 buttonPressed.local = 1;
 

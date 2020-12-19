@@ -46,13 +46,44 @@ exports.ColorGrid.prototype = {
   /**
    * Call the callback for each entry in the grid
    */
-, traverse: function(callback) {
-    for(i in this.grid) {
+, traverse: function(object, callback) {
+    for(var i in this.grid) {
       var col = this.grid[i];
 
-      for(j in col) {
-        callback(i, j, col[j]);
+      for(var j in col) {
+        callback.call(object, i, j, col[j]);
       }
     }
+  }
+
+  /**
+   * Initialize eahc entry in the grid the callback
+   *
+   * The call back is passed the 'col' and 'row' parameters
+   */
+, init: function(callback) {
+    for(var i in this.grid) {
+      var col = this.grid[i];
+
+      for(var j in col) {
+        col[j] = callback(i, j);
+      }
+    }
+  }
+
+  /**
+   * Initialize the grid
+   *
+   * @param from Starting value
+   * @param step How much to increment by on each step
+   */
+, fill: function(from, step) {
+    var cur = from;
+
+    this.init(function(col, row) {
+      var next = cur;
+      cur += step;
+      return next;
+    });
   }
 }

@@ -75,6 +75,16 @@ exports.Push.prototype = {
   }
 
   /**
+   * Show all possible colors
+   *
+   * @param page Which page of colors (0 or 1)
+   */
+, showColors: function(page) {
+    this.colorGrid.fill(page * 64, 1);
+    initColors.call(this);
+  }
+
+  /**
    * Delete all callbacks.
    */
 , deleteCallbacks: function() {
@@ -109,8 +119,5 @@ function findPush() {
  * Initialize the colors of the button matrix after grabbing control
  */
 function initColors() {
-  var outerThis = this;
-  this.colorGrid.traverse(function(col, row, color) {
-    outerThis.buttonMatrix.setColor(col, row, color);
-  });
+  this.colorGrid.traverse(this.buttonMatrix, this.buttonMatrix.setColor);
 }
