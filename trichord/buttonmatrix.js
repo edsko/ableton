@@ -16,12 +16,13 @@
  * Constructor
  *
  * @param push     Reference to the Push2 controller
+ * @param object   Object to call the callback on
  * @param callback Called when a button is pressed or released
  */
-exports.ButtonMatrix = function(push, callback) {
+exports.ButtonMatrix = function(push, object, callback) {
   this.buttonMatrix = findButtonMatrix(push, function(args) {
     if(args[0] == "value" && args.length == 5) {
-      callback({"velocity": args[1], "col": args[2], "row": args[3]});
+      callback.call(object, args[2], args[3], args[1]);
     }
   });
 }
@@ -43,7 +44,7 @@ exports.ButtonMatrix.prototype = {
    * This will cause the ButtonMatrix to stop listening for key presses
    * Should should be called before the button matrix falls out of scope.
    */
-, deleteCallbacks: function() {
+, deleteObservers: function() {
     this.buttonMatrix.property = "";
   }
 }

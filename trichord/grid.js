@@ -4,8 +4,8 @@
  *
  * This code is intended as a tutorial, not for production usage.
  *
- * @module colorgrid
- * Simple 2D color grid
+ * @module grid
+ * Simple 2D grid
  */
 
 /*******************************************************************************
@@ -17,15 +17,16 @@
  *
  * @param cols Number of columns
  * @param rows Number of rows
+ * @param init Initial value for each cell
  */
-exports.ColorGrid = function(cols, rows) {
+exports.Grid = function(cols, rows, init) {
   this.grid = new Array();
 
   for(var i = 0; i < cols; i++) {
     var col = new Array();
 
     for(var j = 0; j < rows; j++) {
-      col[j] = 0;
+      col[j] = init;
     }
 
     this.grid[i] = col;
@@ -35,16 +36,23 @@ exports.ColorGrid = function(cols, rows) {
 /**
  * Class
  */
-exports.ColorGrid.prototype = {
+exports.Grid.prototype = {
   /**
-   * Set a color in the grid
+   * Get the value of a cell in the grid
    */
-  setColor: function(col, row, color) {
-    this.grid[col][row] = color;
+  get: function(col, row) {
+    return this.grid[col][row];
   }
 
   /**
-   * Call the callback for each entry in the grid
+   * Set a cell in the grid
+   */
+, set: function(col, row, value) {
+    this.grid[col][row] = value;
+  }
+
+  /**
+   * Call the callback for each cell in the grid
    */
 , traverse: function(object, callback) {
     for(var i in this.grid) {
@@ -57,9 +65,9 @@ exports.ColorGrid.prototype = {
   }
 
   /**
-   * Initialize each entry in the grid the callback
+   * Initialize each cell in the grid using the callback
    *
-   * The call back is passed the 'col' and 'row' parameters
+   * The callback is passed the 'col' and 'row' parameters
    */
 , init: function(callback) {
     for(var i in this.grid) {

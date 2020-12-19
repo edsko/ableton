@@ -13,7 +13,7 @@
 *******************************************************************************/
 
 var ButtonMatrix = require("buttonmatrix").ButtonMatrix;
-var ColorGrid    = require("colorgrid").ColorGrid;
+var Grid         = require("grid").Grid;
 
 /*******************************************************************************
   Public API
@@ -24,12 +24,14 @@ var ColorGrid    = require("colorgrid").ColorGrid;
  *
  * Should not be called until the M4L device is fully initialized.
  *
- * @param buttonPressed Callback invoked when a button is pressed or released
+ * @param object Object to call the actions on
  */
-exports.Push = function(buttonPressed) {
+exports.Push = function(object) {
+  this.actionObject = object;
   this.controller   = findPush();
-  this.colorGrid    = new ColorGrid(8, 8);
-  this.buttonMatrix = new ButtonMatrix(this.controller, buttonPressed);
+  this.colorGrid    = new Grid(8, 8, 0);
+  this.actionGrid   = new Grid(8, 8, null);
+  this.buttonMatrix = new ButtonMatrix(this.controller, this, buttonPressed);
 };
 
 /**
@@ -54,9 +56,10 @@ exports.Push.prototype = {
     if(control) {
       this.controller.call("grab_control", "Button_Matrix");
 
-      // We initialize the colors after a short delay. If we do not, switching
-      // between tracks works just fine within Ableton itself, but for some reason
-      // it does not work if we switch track using the buttons on the Push.
+      // We initialize the colors after a short delay. If we initialize them
+      // right here, switching between tracks works just fine within Ableton
+      // itself, but for some reason it does not work if we switch track using
+      // the buttons on the Push.
       var initColorsTask = new Task(initColors, this);
       initColorsTask.schedule(0);
     } else {
@@ -69,8 +72,15 @@ exports.Push.prototype = {
    */
 , setColor: function(col, row, color) {
     if(!this.checkFound()) return;
-    this.colorGrid.setColor(col, row, color);
+    this.colorGrid.set(col, row, color);
     this.buttonMatrix.setColor(col, row, color);
+  }
+
+  /**
+   * Set action for one of the buttons
+   */
+, setAction: function(col, row, callback) {
+    this.actionGrid.set(col, row, callback);
   }
 
   /**
@@ -86,8 +96,8 @@ exports.Push.prototype = {
   /**
    * Delete all callbacks.
    */
-, deleteCallbacks: function() {
-    this.buttonMatrix.deleteCallbacks();
+, deleteObservers: function() {
+    this.buttonMatrix.deleteObservers();
   }
 };
 
@@ -119,4 +129,15 @@ function findPush() {
  */
 function initColors() {
   this.colorGrid.traverse(this.buttonMatrix, this.buttonMatrix.setColor);
+}
+
+/**
+ * Handle button presses
+ */
+function buttonPressed(col, row, velocity) {
+  var action = this.actionGrid.get(col, row);
+  var color  = this.colorGrid.get(col, row);
+  if (action != null) {
+    action.call(this.actionObject, col, row, color, velocity);
+  }
 }

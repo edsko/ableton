@@ -66,7 +66,7 @@ exports.OurTrack.prototype = {
    *
    * @see {@link https://cycling74.com/forums/how-to-destroy-a-liveapi-object-instantiated-in-js} for more information.
    */
-, deleteCallbacks: function() {
+, deleteObservers: function() {
     this.view.property = ""; // null does not work!
   }
 };
