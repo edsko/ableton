@@ -20,7 +20,7 @@
  * @param callback Function called whenever the selected track changes
  *                 Gets passed an argument telling it if our track was selected.
  */
-exports.OurTrack = function(callback) {
+exports.OurTrack = function(object, callback) {
   var track   = new LiveAPI(null, "this_device canonical_parent");
   var trackId = track.id;
 
@@ -33,10 +33,10 @@ exports.OurTrack = function(callback) {
     if(args[0] == "selected_track") {
       if (args[2] == trackId) {
         outerThis.selected = true;
-        callback(true);
+        callback.call(object, true);
       } else {
         outerThis.selected = false;
-        callback(false);
+        callback.call(object, false);
       }
     }
   });

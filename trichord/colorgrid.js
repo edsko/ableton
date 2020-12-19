@@ -57,7 +57,7 @@ exports.ColorGrid.prototype = {
   }
 
   /**
-   * Initialize eahc entry in the grid the callback
+   * Initialize each entry in the grid the callback
    *
    * The call back is passed the 'col' and 'row' parameters
    */
@@ -75,15 +75,8 @@ exports.ColorGrid.prototype = {
    * Initialize the grid
    *
    * @param from Starting value
-   * @param step How much to increment by on each step
    */
-, fill: function(from, step) {
-    var cur = from;
-
-    this.init(function(col, row) {
-      var next = cur;
-      cur += step;
-      return next;
-    });
+, fill: function(from) {
+    this.init(function(col, row) { return from++; });
   }
 }

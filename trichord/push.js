@@ -44,25 +44,24 @@ exports.Push.prototype = {
   }
 
   /**
-   * Grab control of the button matrix
+   * Set control of the button matrix
+   *
+   * @param control 'true' if we want to control the button matrix
    */
-, grab: function() {
+, controlButtonMatrix: function(control) {
     if(!this.checkFound()) return;
-    this.controller.call("grab_control", "Button_Matrix");
 
-    // We initialize the colors after a short delay. If we do not, switching
-    // between tracks works just fine within Ableton itself, but for some reason
-    // it does not work if we switch track using the buttons on the Push.
-    var initColorsTask = new Task(initColors, this);
-    initColorsTask.schedule(0);
-  }
+    if(control) {
+      this.controller.call("grab_control", "Button_Matrix");
 
-  /**
-   * Release control of the button matrix
-   */
-, release: function() {
-    if(!this.checkFound()) return;
-    this.controller.call("release_control", "Button_Matrix");
+      // We initialize the colors after a short delay. If we do not, switching
+      // between tracks works just fine within Ableton itself, but for some reason
+      // it does not work if we switch track using the buttons on the Push.
+      var initColorsTask = new Task(initColors, this);
+      initColorsTask.schedule(0);
+    } else {
+      this.controller.call("release_control", "Button_Matrix");
+    }
   }
 
   /**

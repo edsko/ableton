@@ -29,6 +29,9 @@ var ourTrack = null;
   Handle M4L messages
 *******************************************************************************/
 
+// TODO: Introduce PushInstrument class
+// Then make Trichord a derived class.
+
 /**
  * Initialize the device.
  *
@@ -43,7 +46,7 @@ function init() {
   if(ourTrack != null) ourTrack.deleteCallbacks();
 
   push     = new Push(buttonPressed);
-  ourTrack = new OurTrack(ourTrackSelected);
+  ourTrack = new OurTrack(push, push.controlButtonMatrix);
 
   push.setColor(0, 2, 65);
   push.setColor(0, 3, 69);
@@ -91,12 +94,3 @@ function buttonPressed(args) {
   // push.setColor(args.col, args.row, 10);
 }
 buttonPressed.local = 1;
-
-function ourTrackSelected(selected) {
-  if(selected) {
-    push.grab();
-  } else {
-    push.release();
-  }
-}
-ourTrackSelected.local = 1;
