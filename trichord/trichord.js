@@ -133,6 +133,7 @@ function msg_int(i) {
 }
 
 function setEnabled(enabled) {
+  if(push == null) return;
   push.controlButtonMatrix(enabled);
 }
 
@@ -186,10 +187,11 @@ updateTrichord.local = 1;
  * Respond to scale changes
  */
 function setScale(scale) {
-  if(scale != scales.CUSTOM) {
-    updateTrichord(0, scale);
-    updateTrichord(1, scale);
-  }
+  if(push  == null)          return;
+  if(scale == scales.CUSTOM) return;
+
+  updateTrichord(0, scale);
+  updateTrichord(1, scale);
 }
 setScale.local = 1;
 
