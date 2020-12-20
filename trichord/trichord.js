@@ -10,6 +10,9 @@
 
 /*******************************************************************************
   Device initialization
+
+  Disable automatch because before the device is disabled, the 'deleteObservers'
+  message should be sent.
 *******************************************************************************/
 
 inlets    = 3;
@@ -33,9 +36,33 @@ var OurTrack = require("ourtrack").OurTrack;
   Global variables
 *******************************************************************************/
 
-var push     = null;
-var ourTrack = null;
-var trichord = new Array(6);
+var push        = null;
+var ourTrack    = null;
+var activeScale = [48, 0, 53, 55, 0, 60];
+
+/*******************************************************************************
+  Constants
+*******************************************************************************/
+
+var scales = {
+    RYU_KYU: 0
+  , MIN_YO: 1
+  , RITSU: 2
+  , MIYAKO_BUSHI: 3
+  , CUSTOM: 4
+  };
+
+// For each trichord, the choice for the middle note per scale
+var trichordNotes = [
+    [49, 50, 51, 52]
+  , [56, 57, 58, 59]
+  ];
+
+// For each trichord, the color of the middle note per scale
+var trichordColors = [
+    [65, 69, 4, 2]
+  , [73, 77, 12, 10]
+  ];
 
 /*******************************************************************************
   Handle M4L messages
@@ -59,55 +86,23 @@ function init() {
   push     = new Push(this);
   ourTrack = new OurTrack(push, push.controlButtonMatrix);
 
-  // Colors to change the first trichord
-  push.setColor(0, 2, 65);
-  push.setColor(0, 3, 69);
-  push.setColor(0, 4, 4);
-  push.setColor(0, 5, 2);
+  // Set up buttons to change the scales
+  for(var i = 0; i < 4; i++) {
+    push.setColor(0, 2 + i, trichordColors[0][i]);
+    push.setColor(7, 2 + i, trichordColors[1][i]);
 
-  // Colors to change the second trichord
-  push.setColor(7, 2, 73);
-  push.setColor(7, 3, 77);
-  push.setColor(7, 4, 12);
-  push.setColor(7, 5, 10);
+    push.setAction(0, 2 + i, updateScale(0, i));
+    push.setAction(7, 2 + i, updateScale(1, i));
+  }
 
-  // Colors for the notes (default to miyako-bushi)
-  push.setColor(1, 4, 64); // C
-  push.setColor(2, 4, 65); // C#/D/D#/E
-  push.setColor(3, 4, 64); // F
-  push.setColor(4, 4, 64); // G
-  push.setColor(5, 4, 73); // G#/A/A#/B
-  push.setColor(6, 4, 64); // C
+  // Set up buttons to play notes
+  for(var i = 0; i < 6; i++) {
+    push.setColor(1 + i, 4, 64);
+    push.setAction(1 + i, 4, sendNote(i));
+  }
 
-  // Actions to change the first trichord
-  push.setAction(0, 2, updateScale(2, 4, 1, 49));
-  push.setAction(0, 3, updateScale(2, 4, 1, 50));
-  push.setAction(0, 4, updateScale(2, 4, 1, 51));
-  push.setAction(0, 5, updateScale(2, 4, 1, 52));
 
-  // Actions to change the second trichord
-  push.setAction(7, 2, updateScale(5, 4, 4, 56));
-  push.setAction(7, 3, updateScale(5, 4, 4, 57));
-  push.setAction(7, 4, updateScale(5, 4, 4, 58));
-  push.setAction(7, 5, updateScale(5, 4, 4, 59));
-
-  // Actions to play notes
-  push.setAction(1, 4, sendNote(0));
-  push.setAction(2, 4, sendNote(1));
-  push.setAction(3, 4, sendNote(2));
-  push.setAction(4, 4, sendNote(3));
-  push.setAction(5, 4, sendNote(4));
-  push.setAction(6, 4, sendNote(5));
-
-  // The fixed notes of the trichord
-  trichord[0] = 48;
-  trichord[2] = 53;
-  trichord[3] = 55;
-  trichord[5] = 60;
-
-  // Default to the miyako-bushi scale
-  trichord[1] = 49;
-  trichord[4] = 56;
+  setScale(scales.RYU_KYU);
 }
 
 // TODO:
@@ -151,13 +146,11 @@ function msg_int(i) {
 /**
  * Update part of the scale
  */
-function updateScale(scaleCol, scaleRow, scaleIndex, newNote) {
-  return function(pressedCol, pressedRow, color, velocity) {
-    // Update on button release
+function updateScale(trichord, scale) {
+  return function(col, row, color, velocity) {
     if(velocity == 0) {
-      push.setColor(scaleCol, scaleRow, color);
-      trichord[scaleIndex] = newNote;
-      outlet(1, 5); // Set scale to custom
+      updateTrichord(trichord, scale);
+      outlet(1, scales.CUSTOM); // Set scale dial to custom
     }
   }
 }
@@ -167,7 +160,35 @@ function updateScale(scaleCol, scaleRow, scaleIndex, newNote) {
  */
 function sendNote(note) {
   return function(col, row, color, velocity) {
-    outlet(0, [trichord[note], velocity]);
+    outlet(0, [activeScale[note], velocity]);
   }
 }
 sendNote.local = 1;
+
+/**
+ * Change one of the two trichords
+ */
+function updateTrichord(trichord, scale) {
+  switch(trichord) {
+    case 0:
+      activeScale[1] = trichordNotes[trichord][scale];
+      push.setColor(2, 4, trichordColors[trichord][scale]);
+      break;
+    case 1:
+      activeScale[4] = trichordNotes[trichord][scale];
+      push.setColor(5, 4, trichordColors[trichord][scale]);
+      break;
+  }
+}
+updateTrichord.local = 1;
+
+/**
+ * Respond to scale changes
+ */
+function setScale(scale) {
+  if(scale != scales.CUSTOM) {
+    updateTrichord(0, scale);
+    updateTrichord(1, scale);
+  }
+}
+setScale.local = 1;
