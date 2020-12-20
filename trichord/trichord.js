@@ -1,11 +1,11 @@
 /**
  * Custom Push2 instrument: Trichords
- * Written by Edsko de Vries <edsko@edsko.net>, 2020
- *
  * This code is intended as a tutorial, not for production usage.
  *
  * @module trichord
- * Top-level module, intended for use with M4L 'js' object.
+ * @description Top-level module, intended for use with M4L 'js' object.
+ * @author Edsko de Vries <edsko@edsko.net>
+ * @copyright Edsko de Vries, 2020
  */
 
 /*******************************************************************************
@@ -75,11 +75,8 @@ var trichordColors = [
 /**
  * Initialize the device.
  *
- * Should be called when the M4L device is fully loaded (use 'live.thisdevice').
- *
- * NOTE: This will not work when looking at the 'trichord' patcher (that is,
- * 'trichord.maxpat'); can only be used inside the scope of the 'trichord'
- * M4L device ('trichord.amxd').
+ * Should be called when the M4L device is fully loaded
+ * (use <code>live.thisdevice</code>).
  */
 function init() {
   deleteObservers();
@@ -108,19 +105,30 @@ function init() {
   setScale(scales.RYU_KYU);
 }
 
-// TODO:
-// https://cycling74.com/forums/does-anyone-know-when-these-messages-occur
-// Talks about loadbang versus live.thisdevice, as well as closebang/savebang
-
+/**
+ * Show all available colors on the push
+ *
+ * @param {number} page Which page of colors (0 or 1)
+ */
 function showColors(page) {
   push.showColors(page);
 }
 
+/**
+ * Delete all observers.
+ *
+ * Should be called when the device is reloaded or removed.
+ */
 function deleteObservers() {
   if(ourTrack != null) ourTrack.deleteObservers();
   if(push     != null) push.deleteObservers();
 }
 
+/**
+ * Respond to <code>int</code> messages on inlet 1 (scale) or 2 (root).
+ *
+ * @param {number} i The incoming <code>int</code>
+ */
 function msg_int(i) {
   switch(inlet) {
     case 1:
@@ -132,6 +140,13 @@ function msg_int(i) {
   }
 }
 
+/**
+ * Respond to the device being enabled or disabled.
+ *
+ * If the device is disabled, we relinguish control over the button matrix.
+ *
+ * @param {boolean} enabled <code>true</code> if the device is enabled
+ */
 function setEnabled(enabled) {
   if(push == null) return;
   push.controlButtonMatrix(enabled);
@@ -145,6 +160,8 @@ function setEnabled(enabled) {
 
 /**
  * Update part of the scale
+ *
+ * @private
  */
 function updateScale(trichord, scale) {
   return function(col, row, color, velocity) {
@@ -158,6 +175,8 @@ updateScale.local = 1;
 
 /**
  * Send the played note to outlet 1
+ *
+ * @private
  */
 function sendNote(note) {
   return function(col, row, color, velocity) {
@@ -168,6 +187,8 @@ sendNote.local = 1;
 
 /**
  * Change one of the two trichords
+ *
+ * @private
  */
 function updateTrichord(trichord, scale) {
   switch(trichord) {
@@ -185,6 +206,8 @@ updateTrichord.local = 1;
 
 /**
  * Respond to scale changes
+ *
+ * @private
  */
 function setScale(scale) {
   if(push  == null)          return;
@@ -197,6 +220,8 @@ setScale.local = 1;
 
 /**
  * Respond to root changes
+ *
+ * @private
  */
 function setRoot(root) {
   activeRoot = root;
