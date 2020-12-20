@@ -112,14 +112,6 @@ function init() {
 // https://cycling74.com/forums/does-anyone-know-when-these-messages-occur
 // Talks about loadbang versus live.thisdevice, as well as closebang/savebang
 
-function grab() {
-  push.grab();
-}
-
-function release() {
-  push.release();
-}
-
 function showColors(page) {
   push.showColors(page);
 }
@@ -140,6 +132,10 @@ function msg_int(i) {
   }
 }
 
+function setEnabled(enabled) {
+  push.controlButtonMatrix(enabled);
+}
+
 // TODO: read https://docs.cycling74.com/max8/tutorials/pattrchapter02
 
 /*******************************************************************************
@@ -157,9 +153,10 @@ function updateScale(trichord, scale) {
     }
   }
 }
+updateScale.local = 1;
 
 /**
- * Send the played to outlet 1
+ * Send the played note to outlet 1
  */
 function sendNote(note) {
   return function(col, row, color, velocity) {
@@ -202,3 +199,4 @@ setScale.local = 1;
 function setRoot(root) {
   activeRoot = root;
 }
+setRoot.local = 1;
