@@ -1,11 +1,18 @@
 /**
  * Custom Push2 instrument: Trichords
- * Written by Edsko de Vries <edsko@edsko.net>, 2020
- *
  * This code is intended as a tutorial, not for production usage.
  *
  * @module ourtrack
- * Interface to the track on which the M4L device is loaded.
+ * @description Interface to the track on which the M4L device is loaded.
+ * @author Edsko de Vries <edsko@edsko.net>
+ * @copyright Edsko de Vries, 2020
+ */
+
+/**
+ * Callback used by {@link module:ourtrack.OurTrack}
+ *
+ * @callback constructorCallback
+ * @param {boolean} selected Whether or not the track was selected
  */
 
 /*******************************************************************************
@@ -13,12 +20,11 @@
 *******************************************************************************/
 
 /**
- * Constructor
- *
+ * Interface to the track the Max for Live device is located on.
  * Should not be called until the M4L device is fully initialized.
  *
- * @param callback Function called whenever the selected track changes
- *                 Gets passed an argument telling it if our track was selected.
+ * @constructor
+ * @param {module:ourtrack~constructorCallback} callback Callback
  */
 exports.OurTrack = function(object, callback) {
   var track   = new LiveAPI(null, "this_device canonical_parent");
@@ -50,6 +56,8 @@ exports.OurTrack = function(object, callback) {
 exports.OurTrack.prototype = {
   /**
    * Report if our track is currently selected
+   *
+   * @returns {boolean} <code>true</code> if the track is currently selected.
    */
   isSelected: function() {
     return this.selected;
