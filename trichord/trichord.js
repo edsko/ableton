@@ -39,6 +39,7 @@ var OurTrack = require("ourtrack").OurTrack;
 var push        = null;
 var ourTrack    = null;
 var activeScale = [48, 0, 53, 55, 0, 60];
+var activeRoot  = 0;
 
 /*******************************************************************************
   Constants
@@ -101,7 +102,9 @@ function init() {
     push.setAction(1 + i, 4, sendNote(i));
   }
 
-
+  // Set up defaults
+  outlet(1, scales.RYU_KYU);
+  outlet(2, 0);
   setScale(scales.RYU_KYU);
 }
 
@@ -160,7 +163,7 @@ function updateScale(trichord, scale) {
  */
 function sendNote(note) {
   return function(col, row, color, velocity) {
-    outlet(0, [activeScale[note], velocity]);
+    outlet(0, [activeScale[note] + activeRoot, velocity]);
   }
 }
 sendNote.local = 1;
@@ -192,3 +195,10 @@ function setScale(scale) {
   }
 }
 setScale.local = 1;
+
+/**
+ * Respond to root changes
+ */
+function setRoot(root) {
+  activeRoot = root;
+}
