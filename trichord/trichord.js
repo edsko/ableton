@@ -8,8 +8,19 @@
  * Top-level module, intended for use with M4L 'js' object.
  */
 
-inlets  = 1;
-outlets = 1;
+/*******************************************************************************
+  Device initialization
+*******************************************************************************/
+
+inlets    = 3;
+outlets   = 3;
+autowatch = 0;
+
+setinletassist(1, "From 'scale' dial");
+setinletassist(2, "From 'root' dial");
+
+setoutletassist(1, "To 'scale' dial");
+setoutletassist(2, "To 'root' dial");
 
 /*******************************************************************************
   Imports
@@ -120,6 +131,19 @@ function deleteObservers() {
   if(push     != null) push.deleteObservers();
 }
 
+function msg_int(i) {
+  switch(inlet) {
+    case 1:
+      setScale(i);
+      break;
+    case 2:
+      setRoot(i);
+      break;
+  }
+}
+
+// TODO: read https://docs.cycling74.com/max8/tutorials/pattrchapter02
+
 /*******************************************************************************
   Internal functions
 *******************************************************************************/
@@ -133,6 +157,7 @@ function updateScale(scaleCol, scaleRow, scaleIndex, newNote) {
     if(velocity == 0) {
       push.setColor(scaleCol, scaleRow, color);
       trichord[scaleIndex] = newNote;
+      outlet(1, 5); // Set scale to custom
     }
   }
 }
