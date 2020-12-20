@@ -71,6 +71,8 @@ exports.ButtonMatrix.prototype = {
 
 /**
  * Find the button matrix on the Push2 controller
+ *
+ * @private
  */
 function findButtonMatrix(push, callback) {
   var buttonMatrixId = push.call("get_control", "Button_Matrix");

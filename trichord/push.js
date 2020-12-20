@@ -1,11 +1,22 @@
 /**
  * Custom Push2 instrument: Trichords
- * Written by Edsko de Vries <edsko@edsko.net>, 2020
- *
  * This code is intended as a tutorial, not for production usage.
  *
  * @module push
- * Interface to the Push2 controller.
+ * @description Interface to the Push2 controller.
+ * @author Edsko de Vries <edsko@edsko.net>
+ * @copyright Edsko de Vries, 2020
+ */
+
+/**
+ * Function to be called when a button is pressed.
+ *
+ * @callback actionCallback
+ * @see module:push.Push#setAction
+ * @param {number} col Column
+ * @param {number} row Row
+ * @param {number} color Current color of the button
+ * @param {number} velocity Velocity
  */
 
 /*******************************************************************************
@@ -20,11 +31,12 @@ var Grid         = require("grid").Grid;
 *******************************************************************************/
 
 /**
- * Constructor
- *
+ * Interface to the Push2 controller.
  * Should not be called until the M4L device is fully initialized.
  *
- * @param object Object to call the actions on
+ * @constructor
+ * @param {Object} object
+ *   Object for action callbacks (see {@link module:push.Push#setAction})
  */
 exports.Push = function(object) {
   this.actionObject = object;
@@ -34,12 +46,12 @@ exports.Push = function(object) {
   this.buttonMatrix = new ButtonMatrix(this.controller, this, buttonPressed);
 };
 
-/**
- * Class
- */
 exports.Push.prototype = {
   /**
-   * Return if the Push2 controller was found
+   * Check if the Push2 controller was found
+   *
+   * @returns {boolean}
+   *   <code>true</code> if the push was found
    */
   checkFound: function() {
     return (this.controller != null);
@@ -48,7 +60,8 @@ exports.Push.prototype = {
   /**
    * Set control of the button matrix
    *
-   * @param control 'true' if we want to control the button matrix
+   * @param {boolean} control
+   *   <code>true</code> if we want to control the button matrix
    */
 , controlButtonMatrix: function(control) {
     if(!this.checkFound()) return;
@@ -69,6 +82,10 @@ exports.Push.prototype = {
 
   /**
    * Set the color of one of the buttons
+   *
+   * @param {number} col Column
+   * @param {number} row Row
+   * @param {number} color New color
    */
 , setColor: function(col, row, color) {
     if(!this.checkFound()) return;
@@ -78,6 +95,10 @@ exports.Push.prototype = {
 
   /**
    * Set action for one of the buttons
+   *
+   * @param {number} col Column
+   * @param {number} row Row
+   * @param {module:push~actionCallback} callback Callback
    */
 , setAction: function(col, row, callback) {
     this.actionGrid.set(col, row, callback);
@@ -86,7 +107,7 @@ exports.Push.prototype = {
   /**
    * Show all possible colors
    *
-   * @param page Which page of colors (0 or 1)
+   * @param {number} page Which page of colors (0 or 1)
    */
 , showColors: function(page) {
     this.colorGrid.fill(page * 64, 1);
@@ -94,7 +115,9 @@ exports.Push.prototype = {
   }
 
   /**
-   * Delete all callbacks.
+   * Delete all observers.
+   *
+   * Should be called before the object falls out of scope.
    */
 , deleteObservers: function() {
     this.buttonMatrix.deleteObservers();
@@ -109,6 +132,8 @@ exports.Push.prototype = {
  * Find the Push2 controller
  *
  * NOTE: We do not take into account that there might be more than one.
+ *
+ * @private
  */
 function findPush() {
   var liveApp            = new LiveAPI(null, "live_app")
@@ -126,6 +151,8 @@ function findPush() {
 
 /**
  * Initialize the colors of the button matrix after grabbing control
+ *
+ * @private
  */
 function initColors() {
   this.colorGrid.traverse(this.buttonMatrix, this.buttonMatrix.setColor);
@@ -133,6 +160,8 @@ function initColors() {
 
 /**
  * Handle button presses
+ *
+ * @private
  */
 function buttonPressed(col, row, velocity) {
   var action = this.actionGrid.get(col, row);
