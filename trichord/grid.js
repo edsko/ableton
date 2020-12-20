@@ -1,11 +1,29 @@
 /**
  * Custom Push2 instrument: Trichords
- * Written by Edsko de Vries <edsko@edsko.net>, 2020
- *
  * This code is intended as a tutorial, not for production usage.
  *
  * @module grid
- * Simple 2D grid
+ * @description Simple 2D grid
+ * @author Edsko de Vries <edsko@edsko.net>
+ * @copyright Edsko de Vries, 2020
+ */
+
+/**
+ * Callback used by {@link module:grid.Grid#init}.
+ *
+ * @callback initCallback
+ * @param {number} col Column
+ * @param {number} row Row
+ * @returns {*} New value for the cell
+ */
+
+/**
+ * Callback used by {@link module:grid.Grid#traverse}.
+ *
+ * @callback traverseCallback
+ * @param {number} col Column
+ * @param {number} row Row
+ * @param {*} value Value of the cell
  */
 
 /*******************************************************************************
@@ -13,11 +31,12 @@
 *******************************************************************************/
 
 /**
- * Constructor
+ * Simple 2D array of values
  *
- * @param cols Number of columns
- * @param rows Number of rows
- * @param init Initial value for each cell
+ * @constructor
+ * @param {number} cols Number of columns
+ * @param {number} rows Number of rows
+ * @param {*} init Initial value for each cell
  */
 exports.Grid = function(cols, rows, init) {
   this.grid = new Array();
@@ -33,12 +52,13 @@ exports.Grid = function(cols, rows, init) {
   }
 }
 
-/**
- * Class
- */
 exports.Grid.prototype = {
   /**
    * Get the value of a cell in the grid
+   *
+   * @param {number} col Column
+   * @param {number} row Row
+   * @returns {*} Value of the selected cell
    */
   get: function(col, row) {
     return this.grid[col][row];
@@ -46,13 +66,20 @@ exports.Grid.prototype = {
 
   /**
    * Set a cell in the grid
+   *
+   * @param {number} col Column
+   * @param {number} row Row
+   * @param {*} value New value
    */
 , set: function(col, row, value) {
     this.grid[col][row] = value;
   }
 
   /**
-   * Call the callback for each cell in the grid
+   * Call a function for each cell in the grid.
+   *
+   * @param {Object} object Object to invoke the callback on
+   * @param {module:grid~traverseCallback} callback Callback
    */
 , traverse: function(object, callback) {
     for(var i in this.grid) {
@@ -65,9 +92,9 @@ exports.Grid.prototype = {
   }
 
   /**
-   * Initialize each cell in the grid using the callback
+   * Initialize each cell in the grid using the callback.
    *
-   * The callback is passed the 'col' and 'row' parameters
+   * @param {module:grid~initCallback} callback Callback
    */
 , init: function(callback) {
     for(var i in this.grid) {
@@ -80,9 +107,9 @@ exports.Grid.prototype = {
   }
 
   /**
-   * Initialize the grid
+   * Fill the grid with consecutive numbers.
    *
-   * @param from Starting value
+   * @param {number} from Starting value
    */
 , fill: function(from) {
     this.init(function(col, row) { return from++; });
