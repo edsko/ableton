@@ -82,7 +82,9 @@ function init() {
   deleteObservers();
 
   push     = new Push(this);
-  ourTrack = new OurTrack(push, push.controlButtonMatrix);
+  ourTrack = new OurTrack(this, function(trackNo, selected) {
+    push.controlButtonMatrix(selected);
+  });
 
   // Set up buttons to change the scales
   for(var i = 0; i < 4; i++) {
