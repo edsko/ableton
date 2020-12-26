@@ -34,9 +34,8 @@ exports.OurTrack = function(object, callback) {
   // Set up our initial state
   this.update(object, callback);
 
-  // {@link https://docs.cycling74.com/max8/vignettes/live_api_overview} tells
-  // us that we can use the relative path "this_device canonical_parent" to get
-  // the track the device is currently on. However, we cannot observe relative
+  // We can use the relative path "this_device canonical_parent" to get the
+  // track the device is currently on. However, we cannot observe relative
   // paths. We therefore monitor this indirectly:
 
   // 1. We first get the initial canonical path to this device, something like
@@ -119,15 +118,12 @@ exports.OurTrack.prototype = {
    *
    * This means we will stop watching the track.
    *
-   * It is important to call this function before allowing the object to
-   * fall out of scope, otherwise the view and its callback will continue
-   * to keep each other alive.
-   *
-   * @see {@link https://cycling74.com/forums/how-to-destroy-a-liveapi-object-instantiated-in-js} for more information.
+   * It is important to call this function before allowing the 'OurTrack' to
+   * fall out of scope, otherwise these views and their callbacks will not
+   * be GCed and the callback will continue to be called.
    */
 , deleteObservers: function() {
-    // Setting to 'null' does not work!
-    this.monitorTrack.path    = "";
-    this.monitorSelected.path = "";
+    this.monitorTrack.mode = 0;
+    this.monitorSelected.path = ""; // Setting to 'null' does not work!
   }
 };
