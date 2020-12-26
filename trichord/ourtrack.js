@@ -11,7 +11,8 @@
 /**
  * Callback used by {@link module:ourtrack.OurTrack}
  *
- * @callback constructorCallback
+ * @callback observerCallback
+ * @param {number} trackNo The number of the track we're on
  * @param {boolean} selected Whether or not the track was selected
  */
 
@@ -24,30 +25,50 @@
  * Should not be called until the M4L device is fully initialized.
  *
  * @constructor
- * @param {module:ourtrack~constructorCallback} callback Callback
+ * @param {Object} object Object to call the callbak on
+ * @param {module:ourtrack~observerCallback} callback Callback
  */
 exports.OurTrack = function(object, callback) {
-  var track   = new LiveAPI(null, "this_device canonical_parent");
-  var trackId = track.id;
+  var outerThis = this;
 
-  // Register a callback to be run every time the selected track changes
-  // We make it part of 'this' so that its lifetime is tied to ours;
-  // if we didn't, the callback would not be called anymore the moment we leave
-  // the scope of this constructor).
-  outerThis = this;
-  this.view = new LiveAPI(function(args) {
-    if(args[0] == "selected_track") {
-      if (args[2] == trackId) {
-        outerThis.selected = true;
-        callback.call(object, true);
-      } else {
-        outerThis.selected = false;
-        callback.call(object, false);
-      }
+  // Set up our initial state
+  this.update(object, callback);
+
+  // {@link https://docs.cycling74.com/max8/vignettes/live_api_overview} tells
+  // us that we can use the relative path "this_device canonical_parent" to get
+  // the track the device is currently on. However, we cannot observe relative
+  // paths. We therefore monitor this indirectly:
+
+  // 1. We first get the initial canonical path to this device, something like
+  // "live_set tracks 0 devices 2"
+  var initialPath = new LiveAPI(null, "this_device").unquotedpath;
+
+  // 2. This gives us a canonical path that we can monitor. We need to set the
+  // mode to '1', because if our device is moved to a different track, we want
+  // to be notified.
+  //
+  // We make this part of 'this' so that it doesn't get GCed.
+  this.monitorTrack = new LiveAPI(function(args) {
+    var currentPath = new LiveAPI(null, "this_device").unquotedpath;
+
+    if(currentPath != outerThis.monitorTrack.unquotedpath) {
+      // 3. If the device is moved, we must then update the path we monitor
+      outerThis.monitorTrack.path = currentPath;
+      outerThis.update(object, callback);
     }
   });
-  this.view.path     = "live_set view";
-  this.view.property = "selected_track";
+  this.monitorTrack.path = initialPath;
+  this.monitorTrack.mode = 1;
+
+  // In addition to monitoring which track we are on, we also want to monitor
+  // which track is currently selected. Fortunately, this is a little easier.
+  this.monitorSelected = new LiveAPI(function(args) {
+    if(args[0] == "selected_track") {
+      outerThis.update(object, callback);
+    }
+  });
+  this.monitorSelected.path     = "live_set view";
+  this.monitorSelected.property = "selected_track";
 }
 
 /**
@@ -59,8 +80,38 @@ exports.OurTrack.prototype = {
    *
    * @returns {boolean} <code>true</code> if the track is currently selected.
    */
-  isSelected: function() {
+  getIsSelected: function() {
     return this.selected;
+  }
+
+  /**
+   * Report the number of the track this device lives on
+   *
+   * @returns {number} track number
+   */
+, getTrackNo: function() {
+    return this.trackNo;
+  }
+
+, /**
+   * Check again which track we are on, and whether it is selected.
+   *
+   * There should normally be no need to call this function manually.
+   *
+   * @param {Object} object Object to call the callbak on
+   * @param {module:ourtrack~observerCallback} callback Callback
+   */
+  update: function(object, callback) {
+    var ourTrack      = new LiveAPI(null, "this_device canonical_parent");
+    var selectedTrack = new LiveAPI(null, "live_set view selected_track");
+    var selected      = ourTrack.id == selectedTrack.id;
+    var trackNo       = parseInt(ourTrack.unquotedpath.split(" ")[2]);
+
+    if(this.selected != selected || this.trackNo != trackNo) {
+      this.selected = selected;
+      this.trackNo  = trackNo;
+      callback.call(object, trackNo, selected);
+    }
   }
 
   /**
@@ -75,6 +126,8 @@ exports.OurTrack.prototype = {
    * @see {@link https://cycling74.com/forums/how-to-destroy-a-liveapi-object-instantiated-in-js} for more information.
    */
 , deleteObservers: function() {
-    this.view.property = ""; // null does not work!
+    // Setting to 'null' does not work!
+    this.monitorTrack.path    = "";
+    this.monitorSelected.path = "";
   }
 };

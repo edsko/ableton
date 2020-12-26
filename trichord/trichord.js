@@ -152,6 +152,22 @@ function setEnabled(enabled) {
   push.controlButtonMatrix(enabled);
 }
 
+function scheduleRelease() {
+  post("scheduleRelease\n");
+
+  var context = {};
+
+  var task = new Task(function() {
+    var push = new Push(this);
+    push.controlButtonMatrix(false);
+  }, context);
+  task.schedule(0);
+}
+
+function notifydeleted() {
+  scheduleRelease();
+}
+
 // TODO: read https://docs.cycling74.com/max8/tutorials/pattrchapter02
 
 /*******************************************************************************
