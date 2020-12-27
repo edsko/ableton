@@ -100,15 +100,13 @@ function deleteObservers() {
  * Dispatch other messages
  */
 function anything() {
-  var args = arrayfromargs(arguments);
-
   switch(messagename) {
     // Messages that update the state
     case 'scale':
     case 'root':
     case 'custom1':
     case 'custom2':
-      state[messagename] = args[0];
+      state[messagename] = arguments[0];
       updatePush();
       break;
 
@@ -116,7 +114,7 @@ function anything() {
     case 'showColors':
     case 'controlButtonMatrix':
       if(push != null) {
-        push[messagename](args);
+        push[messagename].apply(push, arguments);
       }
       break;
 

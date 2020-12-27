@@ -66,7 +66,7 @@ exports.Push.prototype = {
 , controlButtonMatrix: function(control) {
     if(!this.checkFound()) return;
 
-    if(control == 1) {
+    if(control) {
       this.controller.call("grab_control", "Button_Matrix");
 
       // We initialize the colors after a short delay. If we initialize them
