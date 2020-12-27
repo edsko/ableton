@@ -38,9 +38,6 @@ exports.ButtonMatrix = function(push, object, callback) {
   });
 }
 
-/**
- * Class
- */
 exports.ButtonMatrix.prototype = {
   /**
    * Set the color of one of the buttons

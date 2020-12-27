@@ -15,15 +15,9 @@
   message should be sent.
 *******************************************************************************/
 
-inlets    = 3;
-outlets   = 3;
+inlets    = 2;
+outlets   = 2;
 autowatch = 0;
-
-setinletassist(1, "From 'scale' dial");
-setinletassist(2, "From 'root' dial");
-
-setoutletassist(1, "To 'scale' dial");
-setoutletassist(2, "To 'root' dial");
 
 /*******************************************************************************
   Imports
@@ -31,6 +25,8 @@ setoutletassist(2, "To 'root' dial");
 
 var Push     = require("push").Push;
 var OurTrack = require("ourtrack").OurTrack;
+var State    = require("trichordstate").TrichordState;
+var Scale    = require("trichordstate").Scale;
 
 /*******************************************************************************
   Global variables
@@ -38,26 +34,12 @@ var OurTrack = require("ourtrack").OurTrack;
 
 var push        = null;
 var ourTrack    = null;
-var activeScale = [48, 0, 53, 55, 0, 60];
-var activeRoot  = 0;
+var activeScale = null;
+var state       = new State();
 
 /*******************************************************************************
   Constants
 *******************************************************************************/
-
-var scales = {
-    RYU_KYU: 0
-  , MIN_YO: 1
-  , RITSU: 2
-  , MIYAKO_BUSHI: 3
-  , CUSTOM: 4
-  };
-
-// For each trichord, the choice for the middle note per scale
-var trichordNotes = [
-    [49, 50, 51, 52]
-  , [56, 57, 58, 59]
-  ];
 
 // For each trichord, the color of the middle note per scale
 var trichordColors = [
@@ -68,9 +50,6 @@ var trichordColors = [
 /*******************************************************************************
   Handle M4L messages
 *******************************************************************************/
-
-// TODO: Introduce PushInstrument class
-// Then make Trichord a derived class.
 
 /**
  * Initialize the device.
@@ -91,8 +70,8 @@ function init() {
     push.setColor(0, 2 + i, trichordColors[0][i]);
     push.setColor(7, 2 + i, trichordColors[1][i]);
 
-    push.setAction(0, 2 + i, updateScale(0, i));
-    push.setAction(7, 2 + i, updateScale(1, i));
+    push.setAction(0, 2 + i, setCustom(0, i));
+    push.setAction(7, 2 + i, setCustom(1, i));
   }
 
   // Set up buttons to play notes
@@ -101,19 +80,10 @@ function init() {
     push.setAction(1 + i, 4, sendNote(i));
   }
 
-  // Set up defaults
-  outlet(1, scales.RYU_KYU);
-  outlet(2, 0);
-  setScale(scales.RYU_KYU);
-}
-
-/**
- * Show all available colors on the push
- *
- * @param {number} page Which page of colors (0 or 1)
- */
-function showColors(page) {
-  push.showColors(page);
+  // Update the push with our current state
+  // The state will have been updated in response to the messages from
+  // 'live.dial' or 'pattr' before 'live.thisdevice' calls 'init'.
+  updatePush();
 }
 
 /**
@@ -127,69 +97,85 @@ function deleteObservers() {
 }
 
 /**
- * Respond to <code>int</code> messages on inlet 1 (scale) or 2 (root).
- *
- * @param {number} i The incoming <code>int</code>
+ * Dispatch other messages
  */
-function msg_int(i) {
-  switch(inlet) {
-    case 1:
-      setScale(i);
+function anything() {
+  var args = arrayfromargs(arguments);
+
+  switch(messagename) {
+    // Messages that update the state
+    case 'scale':
+    case 'root':
+    case 'custom1':
+    case 'custom2':
+      state[messagename] = args[0];
+      updatePush();
       break;
-    case 2:
-      setRoot(i);
+
+    // Messages we just forward directly to the push object
+    case 'showColors':
+    case 'controlButtonMatrix':
+      if(push != null) {
+        push[messagename](args);
+      }
+      break;
+
+    default:
+      error("Message '" + messagename + "' not understood\n");
       break;
   }
 }
-
-/**
- * Respond to the device being enabled or disabled.
- *
- * If the device is disabled, we relinguish control over the button matrix.
- *
- * @param {boolean} enabled <code>true</code> if the device is enabled
- */
-function setEnabled(enabled) {
-  if(push == null) return;
-  push.controlButtonMatrix(enabled);
-}
-
-function scheduleRelease() {
-  post("scheduleRelease\n");
-
-  var context = {};
-
-  var task = new Task(function() {
-    var push = new Push(this);
-    push.controlButtonMatrix(false);
-  }, context);
-  task.schedule(0);
-}
-
-function notifydeleted() {
-  scheduleRelease();
-}
-
-// TODO: read https://docs.cycling74.com/max8/tutorials/pattrchapter02
 
 /*******************************************************************************
   Internal functions
 *******************************************************************************/
 
 /**
- * Update part of the scale
+ * Update the Push to reflect our internal state
  *
  * @private
  */
-function updateScale(trichord, scale) {
+function updatePush() {
+  // Cache the scale (so that we can respond to button presses)
+  activeScale = state.getScale();
+
+  if (push != null) {
+    // Update the colors of the button matrix
+    push.setColor(2, 4, trichordColors[0][state.getTrichord1()]);
+    push.setColor(5, 4, trichordColors[1][state.getTrichord2()]);
+  }
+}
+updatePush.local = 1;
+
+/**
+ * Respond to user selecting a custom scale
+ *
+ * @private
+ */
+function setCustom(trichord, offset) {
   return function(col, row, color, velocity) {
     if(velocity == 0) {
-      updateTrichord(trichord, scale);
-      outlet(1, scales.CUSTOM); // Set scale dial to custom
+      // Override the scale, both in our state and in the UI
+      state.scale = Scale.CUSTOM;
+      outlet(1, ["scale", state.scale]);
+
+      // Update the scale (and send it out to the pattr for storage)
+      switch(trichord) {
+        case 0:
+          state.custom1 = offset;
+          outlet(1, ["custom1", offset]);
+          break;
+        case 1:
+          state.custom2 = offset;
+          outlet(1, ["custom2", offset]);
+          break;
+      }
+
+      updatePush();
     }
   }
 }
-updateScale.local = 1;
+setCustom.local = 1;
 
 /**
  * Send the played note to outlet 1
@@ -198,50 +184,7 @@ updateScale.local = 1;
  */
 function sendNote(note) {
   return function(col, row, color, velocity) {
-    outlet(0, [activeScale[note] + activeRoot, velocity]);
+    outlet(0, [48 + activeScale[note], velocity]);
   }
 }
 sendNote.local = 1;
-
-/**
- * Change one of the two trichords
- *
- * @private
- */
-function updateTrichord(trichord, scale) {
-  switch(trichord) {
-    case 0:
-      activeScale[1] = trichordNotes[trichord][scale];
-      push.setColor(2, 4, trichordColors[trichord][scale]);
-      break;
-    case 1:
-      activeScale[4] = trichordNotes[trichord][scale];
-      push.setColor(5, 4, trichordColors[trichord][scale]);
-      break;
-  }
-}
-updateTrichord.local = 1;
-
-/**
- * Respond to scale changes
- *
- * @private
- */
-function setScale(scale) {
-  if(push  == null)          return;
-  if(scale == scales.CUSTOM) return;
-
-  updateTrichord(0, scale);
-  updateTrichord(1, scale);
-}
-setScale.local = 1;
-
-/**
- * Respond to root changes
- *
- * @private
- */
-function setRoot(root) {
-  activeRoot = root;
-}
-setRoot.local = 1;

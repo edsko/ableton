@@ -66,7 +66,7 @@ exports.Push.prototype = {
 , controlButtonMatrix: function(control) {
     if(!this.checkFound()) return;
 
-    if(control) {
+    if(control == 1) {
       this.controller.call("grab_control", "Button_Matrix");
 
       // We initialize the colors after a short delay. If we initialize them
@@ -74,7 +74,7 @@ exports.Push.prototype = {
       // itself, but for some reason it does not work if we switch track using
       // the buttons on the Push.
       var initColorsTask = new Task(initColors, this);
-      initColorsTask.schedule(0);
+      initColorsTask.schedule(10);
     } else {
       this.controller.call("release_control", "Button_Matrix");
     }
