@@ -1,6 +1,5 @@
 /**
- * Custom Push2 instrument: Trichords
- * This code is intended as a tutorial, not for production usage.
+ * Max Handpan
  *
  * @module push
  * @description Interface to the Push2 controller.
@@ -23,8 +22,8 @@
   Imports
 *******************************************************************************/
 
-var ButtonMatrix = require("buttonmatrix").ButtonMatrix;
-var Grid         = require("grid").Grid;
+var ButtonMatrix = require("push2.buttonmatrix").ButtonMatrix;
+var Grid         = require("util.grid").Grid;
 
 /*******************************************************************************
   Public API
@@ -166,6 +165,7 @@ function initColors() {
 function buttonPressed(col, row, velocity) {
   var action = this.actionGrid.get(col, row);
   var color  = this.colorGrid.get(col, row);
+  // post("buttonPressed", col, row, velocity, color, "\n");
   if (action != null) {
     action.call(this.actionObject, col, row, color, velocity);
   }

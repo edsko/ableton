@@ -1,6 +1,5 @@
 /**
- * Custom Push2 instrument: Trichords
- * This code is intended as a tutorial, not for production usage.
+ * Max Handpan
  *
  * @module buttonmatrix
  * @description Interface to the button matrix of the Push2 controller.

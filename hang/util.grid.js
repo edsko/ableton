@@ -1,9 +1,8 @@
 /**
- * Custom Push2 instrument: Trichords
- * This code is intended as a tutorial, not for production usage.
+ * Max Handpan
  *
  * @module grid
- * @description Simple 2D grid
+ * @description Simple 2D array
  * @author Edsko de Vries <edsko@edsko.net>
  * @copyright Edsko de Vries, 2020
  */

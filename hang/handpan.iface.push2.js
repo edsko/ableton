@@ -1,9 +1,8 @@
 /**
- * Custom Push2 instrument: Trichords
- * This code is intended as a tutorial, not for production usage.
+ * Max Handpan
  *
- * @module trichord
- * @description Top-level module, intended for use with M4L 'js' object.
+ * @module handpan.iface.push2
+ * @description Handpan interface on the Ableton Push 2
  * @author Edsko de Vries <edsko@edsko.net>
  * @copyright Edsko de Vries, 2020
  */
@@ -23,10 +22,10 @@ autowatch = 0;
   Imports
 *******************************************************************************/
 
-var Push     = require("push").Push;
-var OurTrack = require("ourtrack").OurTrack;
-var State    = require("trichordstate").TrichordState;
-var Scale    = require("trichordstate").Scale;
+var Push     = require("push2.controller").Push;
+var OurTrack = require("live.ourtrack").OurTrack;
+var State    = require("handpan.iface.state").HandpanCtrlState;
+var Handpan  = require("handpan.generic");
 
 /*******************************************************************************
   Global variables
@@ -34,18 +33,7 @@ var Scale    = require("trichordstate").Scale;
 
 var push        = null;
 var ourTrack    = null;
-var activeScale = null;
 var state       = new State();
-
-/*******************************************************************************
-  Constants
-*******************************************************************************/
-
-// For each trichord, the color of the middle note per scale
-var trichordColors = [
-    [65, 69, 4, 2]
-  , [73, 77, 12, 10]
-  ];
 
 /*******************************************************************************
   Handle M4L messages
@@ -65,24 +53,38 @@ function init() {
     push.controlButtonMatrix(selected);
   });
 
-  // Set up buttons to change the scales
-  for(var i = 0; i < 4; i++) {
-    push.setColor(0, 2 + i, trichordColors[0][i]);
-    push.setColor(7, 2 + i, trichordColors[1][i]);
+  with (Handpan) {
+    /*
+     * Set up central doum area
+     */
+    var pos = state.positionOfDoum();
+    push.setColor(pos.col, pos.row, state.colors.doum);
+    push.setAction(pos.col, pos.row, sendNote(Articulation.MID, Note.DOUM));
 
-    push.setAction(0, 2 + i, setCustom(0, i));
-    push.setAction(7, 2 + i, setCustom(1, i));
-  }
+    var taks = state.positionOfTaks();
+    for(tak in taks) {
+      pos = taks[tak];
+      push.setColor(pos.col, pos.row, state.colors.tak);
+      push.setAction(pos.col, pos.row, sendNote(Articulation.SLAP, Note.DOUM));
+    }
 
-  // Set up buttons to play notes
-  for(var i = 0; i < 6; i++) {
-    push.setColor(1 + i, 4, 64);
-    push.setAction(1 + i, 4, sendNote(i));
+    /*
+     * Set up the actions for the tonefields
+     *
+     * The colors are set up in 'updatePush' because they vary depending on
+     * settings.
+     */
+    for(var i = 1; i <= 9; i++) {
+      pos  = state.positionOfTonefield(i);
+      note = Note.TONEFIELD_1 + (i - 1);
+      push.setAction(pos[0].col, pos[0].row, sendNote(Articulation.MID, note));
+      push.setAction(pos[1].col, pos[1].row, sendNote(Articulation.SLAP, note));
+    }
   }
 
   // Update the push with our current state
   // The state will have been updated in response to the messages from
-  // 'live.dial' or 'pattr' before 'live.thisdevice' calls 'init'.
+  // 'live.dial' (or 'pattr') before 'live.thisdevice' calls 'init'.
   updatePush();
 }
 
@@ -102,10 +104,7 @@ function deleteObservers() {
 function anything() {
   switch(messagename) {
     // Messages that update the state
-    case 'scale':
-    case 'root':
-    case 'custom1':
-    case 'custom2':
+    case 'fields':
       state[messagename] = arguments[0];
       updatePush();
       break;
@@ -134,55 +133,30 @@ function anything() {
  * @private
  */
 function updatePush() {
-  // Cache the scale (so that we can respond to button presses)
-  activeScale = state.getScale();
-
-  if (push != null) {
-    // Update the colors of the button matrix
-    push.setColor(2, 4, trichordColors[0][state.getTrichord1()]);
-    push.setColor(5, 4, trichordColors[1][state.getTrichord2()]);
+  for(var i = 1; i <= 9; i++) {
+    var pos = state.positionOfTonefield(i);
+    if(i <= state.fields) {
+      push.setColor(pos[0].col, pos[0].row, state.colors.tonefieldMid);
+      push.setColor(pos[1].col, pos[1].row, state.colors.tonefieldSlap);
+    } else {
+      for(var j = 0; j < 2; j++) {
+        push.setColor(pos[j].col, pos[j].row, 0);
+      }
+    }
   }
 }
 updatePush.local = 1;
 
 /**
- * Respond to user selecting a custom scale
- *
- * @private
- */
-function setCustom(trichord, offset) {
-  return function(col, row, color, velocity) {
-    if(velocity == 0) {
-      // Override the scale, both in our state and in the UI
-      state.scale = Scale.CUSTOM;
-      outlet(1, ["scale", state.scale]);
-
-      // Update the scale (and send it out to the pattr for storage)
-      switch(trichord) {
-        case 0:
-          state.custom1 = offset;
-          outlet(1, ["custom1", offset]);
-          break;
-        case 1:
-          state.custom2 = offset;
-          outlet(1, ["custom2", offset]);
-          break;
-      }
-
-      updatePush();
-    }
-  }
-}
-setCustom.local = 1;
-
-/**
  * Send the played note to outlet 1
  *
+ * @param {number} mode Mode
+ * @param {number} note Note
  * @private
  */
-function sendNote(note) {
+function sendNote(mode, note) {
   return function(col, row, color, velocity) {
-    outlet(0, [48 + activeScale[note], velocity]);
+    outlet(0, [48 + (mode * 12) + note, velocity]);
   }
 }
 sendNote.local = 1;
