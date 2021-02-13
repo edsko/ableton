@@ -21,6 +21,7 @@ data Domain =
   | BranchPresets
   | Device
   | DevicePresets
+  | FileRef
   | GroupDevicePreset
   | InstrumentBranchPreset
   | KeyRange
@@ -29,6 +30,7 @@ data Domain =
   | MultiSampler
   | Player
   | SampleParts
+  | SampleRef
   | SelectorRange
   | VelocityRange
 
@@ -41,6 +43,7 @@ deriving via ParseNode (Node AbletonDevicePreset)    instance Parse (Node Ableto
 deriving via ParseNode (Node BranchPresets)          instance Parse (Node BranchPresets)
 deriving via ParseNode (Node Device)                 instance Parse (Node Device)
 deriving via ParseNode (Node DevicePresets)          instance Parse (Node DevicePresets)
+deriving via ParseNode (Node FileRef)                instance Parse (Node FileRef)
 deriving via ParseNode (Node GroupDevicePreset)      instance Parse (Node GroupDevicePreset)
 deriving via ParseNode (Node InstrumentBranchPreset) instance Parse (Node InstrumentBranchPreset)
 deriving via ParseNode (Node KeyRange)               instance Parse (Node KeyRange)
@@ -49,6 +52,7 @@ deriving via ParseNode (Node MultiSamplePart)        instance Parse (Node MultiS
 deriving via ParseNode (Node MultiSampler)           instance Parse (Node MultiSampler)
 deriving via ParseNode (Node Player)                 instance Parse (Node Player)
 deriving via ParseNode (Node SampleParts)            instance Parse (Node SampleParts)
+deriving via ParseNode (Node SampleRef)              instance Parse (Node SampleRef)
 deriving via ParseNode (Node SelectorRange)          instance Parse (Node SelectorRange)
 deriving via ParseNode (Node VelocityRange)          instance Parse (Node VelocityRange)
 
@@ -263,6 +267,9 @@ data instance Required MultiSamplePart = Required_MultiSamplePart {
       keyRange      :: Node KeyRange
     , velocityRange :: Node VelocityRange
     , selectorRange :: Node SelectorRange
+    , sampleStart   :: SampleStart
+    , sampleEnd     :: SampleEnd
+    , sampleRef     :: Node SampleRef
     }
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
@@ -328,6 +335,44 @@ data instance Optional SelectorRange
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
 {-------------------------------------------------------------------------------
+  SampleRef
+-------------------------------------------------------------------------------}
+
+data instance Attrs SampleRef = Attrs_SampleRef {
+      -- No attributes
+    }
+  deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
+
+data instance Required SampleRef = Required_SampleRef {
+      -- Marking this as required for now, though there may well be examples
+      -- where this isn't actually present. If so, need to make it optional.
+      fileRef :: Node FileRef
+    }
+  deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
+
+data instance Optional SampleRef
+    -- No optional children
+  deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
+
+{-------------------------------------------------------------------------------
+  FileRef
+-------------------------------------------------------------------------------}
+
+data instance Attrs FileRef = Attrs_FileRef {
+      -- No attributes
+    }
+  deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
+
+data instance Required FileRef = Required_FileRef {
+      name :: Name
+    }
+  deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
+
+data instance Optional FileRef
+    -- No optional children
+  deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
+
+{-------------------------------------------------------------------------------
   Simple attributes
 -------------------------------------------------------------------------------}
 
@@ -342,3 +387,11 @@ newtype Min = Min Int
 newtype Max = Max Int
   deriving stock (Show, Data)
   deriving Parse via AttrNode "Max" "Value" Int
+
+newtype SampleStart = SampleStart Int
+  deriving stock (Show, Data)
+  deriving Parse via AttrNode "SampleStart" "Value" Int
+
+newtype SampleEnd = SampleEnd Int
+  deriving stock (Show, Data)
+  deriving Parse via AttrNode "SampleEnd" "Value" Int
