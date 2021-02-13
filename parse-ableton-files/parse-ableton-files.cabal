@@ -1,20 +1,21 @@
 cabal-version:       >=1.10
-name:                parse-sampler-rack
+name:                parse-ableton-files
 version:             0.1.0.0
-synopsis:            Parse Ableton Sampler Instrument Rack data
+synopsis:            (Partial) parser for Ableton files
 author:              Edsko de Vries
 maintainer:          edsko@well-typed.com
 build-type:          Simple
 
-executable parse-sampler-rack
+executable parse-ableton
   main-is:             Main.hs
   other-modules:       Ableton.Schema
                        CmdLine
                        Util.SOP
-                       XML.Attr
                        XML.Aux
                        XML.Parser
                        XML.TypeDriven
+                       XML.TypeDriven.API
+                       XML.TypeDriven.Node
   build-depends:       base >=4.14 && <4.15
                      , conduit
                      , conduit-extra

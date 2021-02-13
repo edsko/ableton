@@ -1,5 +1,5 @@
 -- | Type driven XML parsing
-module XML.TypeDriven (
+module XML.TypeDriven.Node (
     -- * Nodes
     Node(..)
   , Attrs
@@ -21,17 +21,9 @@ import Generics.SOP
 import Text.XML.Stream.Parse
 
 import Util.SOP
-import XML.Attr
 import XML.Parser (Parser)
+import XML.TypeDriven.API
 import qualified XML.Parser as P
-
-{-------------------------------------------------------------------------------
-  Class for parsers
--------------------------------------------------------------------------------}
-
--- Typeable is used for error messages
-class Typeable a => Parse a where
-  parse :: Parser (Maybe a)
 
 {-------------------------------------------------------------------------------
   Nodes
