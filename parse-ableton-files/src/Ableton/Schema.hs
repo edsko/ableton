@@ -5,10 +5,11 @@ module Ableton.Schema where
 
 import Data.Data
 import Data.Text (Text)
-import XML.TypeDriven
 
 import qualified GHC.Generics as GHC
 import qualified Generics.SOP as SOP
+
+import XML.TypeDriven
 
 {-------------------------------------------------------------------------------
   Domain definition (used lifted only)
@@ -23,12 +24,9 @@ data Domain =
   | GroupDevicePreset
   | InstrumentBranchPreset
   | KeyRange
-  | Max
-  | Min
   | MultiSampleMap
   | MultiSamplePart
   | MultiSampler
-  | Name
   | Player
   | SampleParts
   | SelectorRange
@@ -46,12 +44,9 @@ deriving via ParseNode (Node DevicePresets)          instance Parse (Node Device
 deriving via ParseNode (Node GroupDevicePreset)      instance Parse (Node GroupDevicePreset)
 deriving via ParseNode (Node InstrumentBranchPreset) instance Parse (Node InstrumentBranchPreset)
 deriving via ParseNode (Node KeyRange)               instance Parse (Node KeyRange)
-deriving via ParseNode (Node Max)                    instance Parse (Node Max)
-deriving via ParseNode (Node Min)                    instance Parse (Node Min)
 deriving via ParseNode (Node MultiSampleMap)         instance Parse (Node MultiSampleMap)
 deriving via ParseNode (Node MultiSamplePart)        instance Parse (Node MultiSamplePart)
 deriving via ParseNode (Node MultiSampler)           instance Parse (Node MultiSampler)
-deriving via ParseNode (Node Name)                   instance Parse (Node Name)
 deriving via ParseNode (Node Player)                 instance Parse (Node Player)
 deriving via ParseNode (Node SampleParts)            instance Parse (Node SampleParts)
 deriving via ParseNode (Node SelectorRange)          instance Parse (Node SelectorRange)
@@ -121,30 +116,12 @@ data instance Attrs InstrumentBranchPreset = Attrs_InstrumentBranchPreset {
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
 data instance Required InstrumentBranchPreset = Required_InstrumentBranchPreset {
-      name :: Node Name
+      name :: Name
     }
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
 data instance Optional InstrumentBranchPreset =
     InstrumentBranchPreset_DevicePresets (Node DevicePresets)
-  deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
-
-{-------------------------------------------------------------------------------
-  Name
--------------------------------------------------------------------------------}
-
-data instance Attrs Name = Attrs_Name {
-      value :: Text
-    }
-  deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
-
-data instance Required Name = Required_Name {
-      -- No required children
-    }
-  deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
-
-data instance Optional Name
-    -- No optional children
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
 {-------------------------------------------------------------------------------
@@ -303,8 +280,8 @@ data instance Attrs KeyRange = Attrs_KeyRange {
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
 data instance Required KeyRange = Required_KeyRange {
-      min :: Node Min
-    , max :: Node Max
+      min :: Min
+    , max :: Max
     }
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
@@ -322,8 +299,8 @@ data instance Attrs VelocityRange = Attrs_VelocityRange {
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
 data instance Required VelocityRange = Required_VelocityRange {
-      min :: Node Min
-    , max :: Node Max
+      min :: Min
+    , max :: Max
     }
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
@@ -341,8 +318,8 @@ data instance Attrs SelectorRange = Attrs_SelectorRange {
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
 data instance Required SelectorRange = Required_SelectorRange {
-      min :: Node Min
-    , max :: Node Max
+      min :: Min
+    , max :: Max
     }
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
@@ -351,37 +328,17 @@ data instance Optional SelectorRange
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
 {-------------------------------------------------------------------------------
-  Min
+  Simple attributes
 -------------------------------------------------------------------------------}
 
-data instance Attrs Min = Attrs_Min {
-      value :: Int
-    }
-  deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
+newtype Name = Name Text
+  deriving stock (Show, Data)
+  deriving Parse via AttrNode "Name" "Value" Text
 
-data instance Required Min = RequiredMin {
-      -- No required children
-    }
-  deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
+newtype Min = Min Int
+  deriving stock (Show, Data)
+  deriving Parse via AttrNode "Min" "Value" Int
 
-data instance Optional Min
-    -- No optional children
-  deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
-
-{-------------------------------------------------------------------------------
-  Max
--------------------------------------------------------------------------------}
-
-data instance Attrs Max = Attrs_Max {
-      value :: Int
-    }
-  deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
-
-data instance Required Max = RequiredMax {
-      -- No required children
-    }
-  deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
-
-data instance Optional Max
-    -- No optional children
-  deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
+newtype Max = Max Int
+  deriving stock (Show, Data)
+  deriving Parse via AttrNode "Max" "Value" Int
