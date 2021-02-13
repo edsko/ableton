@@ -1,15 +1,10 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-
 module Main where
-
-import Prelude hiding (id)
 
 import Conduit
 import Data.Conduit.Zlib (ungzip)
 import Text.XML.Stream.Parse
-import Data.Generics
 
-import Ableton.Schema
+import Ableton.MultiSampleParts
 import CmdLine
 import XML.TypeDriven
 import qualified XML.Parser as P
@@ -17,19 +12,22 @@ import qualified XML.Parser as P
 main :: IO ()
 main = do
     Options{..} <- getOptions
-    processed :: Maybe (Node Ableton) <-
-      withSourceFile input $ \inp -> runConduit $
-           inp
-        .| ungzip
-        .| parseBytes def
-        .| P.runParser parse
-    print $ processed
-
-allMultiSamplePart :: Node Ableton -> [Node MultiSamplePart]
-allMultiSamplePart = everything (++) (mkQ [] (:[]))
-
-lacksKeyRange :: Node MultiSamplePart -> Bool
-lacksKeyRange (Node _ _ opt) =
-    case opt of
-      [] -> True
-      _  -> False
+    mParsed     <- withSourceFile input $ \inp -> runConduit $
+                        inp
+                     .| ungzip
+                     .| parseBytes def
+                     .| P.runParser parse
+    case mParsed of
+      Nothing ->
+        putStrLn "XML failed to parse"
+      Just parsed ->
+        case cmd of
+          DumpParsed ->
+            print $ parsed
+          ShowMultiSampleParts -> do
+            print $ allMultiSampleParts parsed
+          InvertMultiSampleParts -> do
+            let (inverted, stats) = invertMultiSampleParts $
+                                      allMultiSampleParts parsed
+            print inverted
+            print stats

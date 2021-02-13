@@ -5,6 +5,9 @@ module XML.Aux (
     -- * Attribute parsing
     requireAttrCI
   , attrRead
+  , attrReadMaybe
+  , attrEnum
+  , attrEnumMaybe
     -- * Re-exports
   , contentsToText
   ) where
@@ -45,6 +48,14 @@ attrRead :: Read a => Name -> AttrParser a
 attrRead name =
     force ("Could not parse value of attribute " ++ show name) $
       attrReadMaybe name
+
+-- | Attribute parser for anything that implements 'Enum'
+attrEnumMaybe :: Enum a => Name -> AttrParser (Maybe a)
+attrEnumMaybe name = fmap toEnum <$> attrReadMaybe name
+
+-- | Variation on 'attrEnumMaybe' that fails on 'Nothing'
+attrEnum :: Enum a => Name -> AttrParser a
+attrEnum name = toEnum <$> attrRead name
 
 {-------------------------------------------------------------------------------
   "Re-exports" (defined in "Text.XML.Stream.Parse" but not exported there)

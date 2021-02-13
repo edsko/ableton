@@ -13,6 +13,10 @@ module Util.SOP (
   , Partial(..)
   , InvalidValue(..)
   , complete
+    -- * Compare records
+  , RecordDiff
+  , FieldDiff(..)
+  , recordDiff
   ) where
 
 import Control.Exception (Exception)
@@ -112,3 +116,32 @@ complete =
         [x] -> return x
         []  -> throwM $ MissingValue   n
         _   -> throwM $ MultipleValues n
+
+{-------------------------------------------------------------------------------
+  Diff between two record values
+-------------------------------------------------------------------------------}
+
+type RecordDiff a = NP FieldDiff (Single (Code a))
+
+data FieldDiff a = NoDiff | Diff FieldName a a
+  deriving (Show)
+
+recordDiff ::
+     forall xs a. (Code a ~ '[xs], All Eq xs, HasDatatypeInfo a)
+  => a -> a -> RecordDiff a
+recordDiff = \x y ->
+    hczipWith3
+      (Proxy @Eq)
+      cmp
+      (fieldInfo (Proxy @a))
+      (fromSOP (from x))
+      (fromSOP (from y))
+  where
+    fromSOP :: SOP I '[xs] -> NP I xs
+    fromSOP (SOP (Z xs)) = xs
+    fromSOP (SOP (S xs)) = case xs of {}
+
+    cmp :: Eq x => FieldInfo x -> I x -> I x -> FieldDiff x
+    cmp (FieldInfo name) (I x) (I y)
+      | x == y    = NoDiff
+      | otherwise = Diff name x y

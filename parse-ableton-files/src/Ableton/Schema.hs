@@ -11,6 +11,8 @@ import qualified Generics.SOP as SOP
 
 import XML.TypeDriven
 
+import Ableton.Types
+
 {-------------------------------------------------------------------------------
   Domain definition (used lifted only)
 -------------------------------------------------------------------------------}
@@ -287,8 +289,8 @@ data instance Attrs KeyRange = Attrs_KeyRange {
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
 data instance Required KeyRange = Required_KeyRange {
-      min :: Min
-    , max :: Max
+      min :: Min MidiNote
+    , max :: Max MidiNote
     }
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
@@ -306,8 +308,8 @@ data instance Attrs VelocityRange = Attrs_VelocityRange {
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
 data instance Required VelocityRange = Required_VelocityRange {
-      min :: Min
-    , max :: Max
+      min :: Min Int
+    , max :: Max Int
     }
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
@@ -325,8 +327,8 @@ data instance Attrs SelectorRange = Attrs_SelectorRange {
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
 data instance Required SelectorRange = Required_SelectorRange {
-      min :: Min
-    , max :: Max
+      min :: Min Int
+    , max :: Max Int
     }
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
@@ -377,21 +379,21 @@ data instance Optional FileRef
 -------------------------------------------------------------------------------}
 
 newtype Name = Name Text
-  deriving stock (Show, Data)
+  deriving stock (Show, Eq, Ord, Data)
   deriving Parse via AttrNode "Name" "Value" Text
 
-newtype Min = Min Int
-  deriving stock (Show, Data)
-  deriving Parse via AttrNode "Min" "Value" Int
+newtype Min a = Min a
+  deriving stock (Show, Eq, Ord, Data)
+  deriving Parse via AttrNode "Min" "Value" a
 
-newtype Max = Max Int
-  deriving stock (Show, Data)
-  deriving Parse via AttrNode "Max" "Value" Int
+newtype Max a = Max a
+  deriving stock (Show, Eq, Ord, Data)
+  deriving Parse via AttrNode "Max" "Value" a
 
 newtype SampleStart = SampleStart Int
-  deriving stock (Show, Data)
+  deriving stock (Show, Eq, Ord, Data)
   deriving Parse via AttrNode "SampleStart" "Value" Int
 
 newtype SampleEnd = SampleEnd Int
-  deriving stock (Show, Data)
+  deriving stock (Show, Eq, Ord, Data)
   deriving Parse via AttrNode "SampleEnd" "Value" Int
