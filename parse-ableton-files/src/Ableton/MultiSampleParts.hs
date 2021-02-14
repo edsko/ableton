@@ -9,22 +9,22 @@ module Ableton.MultiSampleParts (
   , multiSampleStats
   ) where
 
-import Data.Map (Map)
-import Data.Maybe (fromMaybe)
+import Data.Bifunctor (second)
 import Data.IntervalMap.FingerTree (IntervalMap, Interval(..))
+import Data.List (sortBy)
+import Data.Map (Map)
+import Data.Ord (comparing)
 import Data.Set (Set)
 
-import qualified Data.IntervalMap.FingerTree as IM
-import qualified Data.Map                    as Map
-import qualified Data.Set                    as Set
-import qualified GHC.Generics                as GHC
-import qualified Generics.SOP                as SOP
+import qualified Data.Map     as Map
+import qualified Data.Set     as Set
+import qualified GHC.Generics as GHC
+import qualified Generics.SOP as SOP
 
 import Ableton.Schema
 import Ableton.Types
 import XML.TypeDriven
 import Util
-import Util.SOP
 import Util.SYB
 
 import qualified Util.IntervalMap as IM
@@ -62,31 +62,23 @@ data InvMSP = InvMSP {
     }
   deriving (Show, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
-invertMultiSampleParts :: [MSP] -> PerSample (PerOffset InvMSP)
-invertMultiSampleParts xs =
-    repeatedly insert xs Map.empty
+invertMultiSampleParts :: [MSP] -> PerSample (PerOffset [InvMSP])
+invertMultiSampleParts =
+      Map.fromList
+    . map (second (IM.fromList . mergeAdjacent . splitFst))
+    . splitOn (\MSP{..} -> (sample, (interval range, InvMSP{..})))
+    . sortBy (comparing (\MSP{..} -> (sample, range)))
   where
-    insert ::
-         MSP
-      -> PerSample (PerOffset InvMSP)
-      -> PerSample (PerOffset InvMSP)
-    insert msp@MSP{sample} =
-        Map.alter (Just . insert' msp . fromMaybe IM.empty) sample
-
-    insert' ::
-         MSP
-      -> PerOffset InvMSP
-      -> PerOffset InvMSP
-    insert' MSP{range = (SampleStart fr, SampleEnd to), ..} =
-        IM.insert (Interval fr to) InvMSP{..}
+    interval :: (SampleStart, SampleEnd) -> Interval Int
+    interval (SampleStart fr, SampleEnd to) = Interval fr to
 
 {-------------------------------------------------------------------------------
   Statistics
 -------------------------------------------------------------------------------}
 
 data InvStats = InvStats {
-      -- | Is the same part of the same used multiple times?
-      overlaps :: [(Interval Int, Interval Int, RecordDiff InvMSP)]
+      -- | Is the same /part/ of the same used multiple times?
+      overlaps :: Bool
 
       -- | Are there samples that are used for non-singleton key ranges?
       --
@@ -99,23 +91,17 @@ data InvStats = InvStats {
     }
   deriving (Show)
 
-multiSampleStats :: PerOffset InvMSP -> InvStats
+multiSampleStats :: PerOffset [InvMSP] -> InvStats
 multiSampleStats msps = InvStats {
-      overlaps         = checkOverlap $ IM.toList msps
-    , nonSingletonKeys = any isNonSingletonKey msps
-    , supportedKeys    = Set.fromList $ foldMap sampleKeyRanges msps
+      overlaps         = checkOverlap $ map fst (IM.toList msps)
+    , nonSingletonKeys = any (any isNonSingletonKey) msps
+    , supportedKeys    = Set.fromList $ foldMap (concatMap sampleKeyRanges) msps
     }
   where
-    checkOverlap ::
-         [(Interval Int, InvMSP)]
-      -> [(Interval Int, Interval Int, RecordDiff InvMSP)]
-    checkOverlap []                      = []
-    checkOverlap [_]                     = []
-    checkOverlap ((i, x) : (i', y) : zs)
-            | IM.intervalsIntersect i i' =
-                 (i, i', recordDiff x y) : checkOverlap ((i', y) : zs)
-            | otherwise                  =
-                                           checkOverlap ((i', y) : zs)
+    checkOverlap :: [Interval Int] -> Bool
+    checkOverlap []        = False
+    checkOverlap [_]       = False
+    checkOverlap (i:i':is) = IM.intervalsIntersect i i' || checkOverlap (i':is)
 
     isNonSingletonKey :: InvMSP -> Bool
     isNonSingletonKey InvMSP{key = (fr, to)} = fr /= to

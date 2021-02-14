@@ -1,10 +1,13 @@
 module Util.IntervalMap (
     intervalsIntersect
   , toList
+  , fromList
   ) where
 
 import Data.IntervalMap.FingerTree (IntervalMap, Interval(..))
 import qualified Data.IntervalMap.FingerTree as IM
+
+import Util
 
 -- | Check if two intervals overlap
 --
@@ -30,3 +33,6 @@ toList xs =
     case IM.leastView xs of
       Nothing       -> []
       Just (x, xs') -> x : toList xs'
+
+fromList :: Ord v => [(Interval v, a)] -> IntervalMap v a
+fromList as = repeatedly (uncurry IM.insert) as IM.empty
