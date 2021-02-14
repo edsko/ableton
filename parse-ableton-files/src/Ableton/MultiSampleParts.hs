@@ -44,6 +44,13 @@ data MSP = MSP {
   deriving (Show, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
 {-------------------------------------------------------------------------------
+  Auxiliary
+-------------------------------------------------------------------------------}
+
+type PerSample a = Map Name a
+type PerOffset a = IntervalMap Int a
+
+{-------------------------------------------------------------------------------
   Inverted view: from sample range to settings
 -------------------------------------------------------------------------------}
 
@@ -54,24 +61,6 @@ data InvMSP = InvMSP {
     , selector :: (Int, Int)
     }
   deriving (Show, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
-
-type PerSample a = Map Name a
-type PerOffset a = IntervalMap Int a
-
-data InvStats = InvStats {
-      -- | Is the same part of the same used multiple times?
-      overlaps :: [(Interval Int, Interval Int, RecordDiff InvMSP)]
-
-      -- | Are there samples that are used for non-singleton key ranges?
-      --
-      -- This implies that these samples would have to be transposed.
-    , nonSingletonKeys :: Bool
-
-      -- | All supported keys (if a sample supports a non-singleton key range,
-      -- we include all keys here)
-    , supportedKeys :: Set MidiNote
-    }
-  deriving (Show)
 
 invertMultiSampleParts :: [MSP] -> PerSample (PerOffset InvMSP)
 invertMultiSampleParts xs =
@@ -90,6 +79,25 @@ invertMultiSampleParts xs =
       -> PerOffset InvMSP
     insert' MSP{range = (SampleStart fr, SampleEnd to), ..} =
         IM.insert (Interval fr to) InvMSP{..}
+
+{-------------------------------------------------------------------------------
+  Statistics
+-------------------------------------------------------------------------------}
+
+data InvStats = InvStats {
+      -- | Is the same part of the same used multiple times?
+      overlaps :: [(Interval Int, Interval Int, RecordDiff InvMSP)]
+
+      -- | Are there samples that are used for non-singleton key ranges?
+      --
+      -- This implies that these samples would have to be transposed.
+    , nonSingletonKeys :: Bool
+
+      -- | All supported keys (if a sample supports a non-singleton key range,
+      -- we include all keys here)
+    , supportedKeys :: Set MidiNote
+    }
+  deriving (Show)
 
 multiSampleStats :: PerOffset InvMSP -> InvStats
 multiSampleStats msps = InvStats {
