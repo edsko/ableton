@@ -56,7 +56,7 @@ data InvMSP = InvMSP {
   deriving (Show, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
 type PerSample a = Map Name a
-type PerOffset a = IntervalMap Int InvMSP
+type PerOffset a = IntervalMap Int a
 
 data InvStats = InvStats {
       -- | Is the same part of the same used multiple times?
@@ -73,25 +73,25 @@ data InvStats = InvStats {
     }
   deriving (Show)
 
-invertMultiSampleParts :: [MSP] -> PerSample (PerOffset MSP)
+invertMultiSampleParts :: [MSP] -> PerSample (PerOffset InvMSP)
 invertMultiSampleParts xs =
     repeatedly insert xs Map.empty
   where
     insert ::
          MSP
-      -> PerSample (PerOffset MSP)
-      -> PerSample (PerOffset MSP)
+      -> PerSample (PerOffset InvMSP)
+      -> PerSample (PerOffset InvMSP)
     insert msp@MSP{sample} =
         Map.alter (Just . insert' msp . fromMaybe IM.empty) sample
 
     insert' ::
          MSP
-      -> PerOffset MSP
-      -> PerOffset MSP
+      -> PerOffset InvMSP
+      -> PerOffset InvMSP
     insert' MSP{range = (SampleStart fr, SampleEnd to), ..} =
         IM.insert (Interval fr to) InvMSP{..}
 
-multiSampleStats :: PerOffset MSP -> InvStats
+multiSampleStats :: PerOffset InvMSP -> InvStats
 multiSampleStats msps = InvStats {
       overlaps         = checkOverlap $ IM.toList msps
     , nonSingletonKeys = any isNonSingletonKey msps
