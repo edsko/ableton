@@ -29,6 +29,7 @@ executable parse-ableton
                      , exceptions
                      , fingertree
                      , generics-sop
+                     , mtl
                      , optparse-applicative
                      , sop-core
                      , syb
@@ -65,3 +66,4 @@ executable parse-ableton
                        TypeOperators
                        UndecidableInstances
                        UndecidableSuperClasses
+                       ViewPatterns

@@ -26,9 +26,12 @@ main = do
         case cmd of
           DumpParsed ->
             print $ parsed
-          ShowMultiSampleParts -> do
-            print $ allMultiSampleParts parsed
-          InvertMultiSampleParts -> do
-            let inverted = invertMultiSampleParts $ allMultiSampleParts parsed
+          ShowMSP -> do
+            print $ allMSP parsed
+          InvertMSP -> do
+            let inverted = invertMSP $ allMSP parsed
             print $ IM.toList <$> inverted
-            print $ multiSampleStats <$> inverted
+            print $ statsMSP  <$> inverted
+          SummariseMSP options -> do
+            let inverted = invertMSP $ allMSP parsed
+            print $ summariseMSP options inverted

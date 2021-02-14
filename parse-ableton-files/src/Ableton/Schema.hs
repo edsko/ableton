@@ -378,22 +378,22 @@ data instance Optional FileRef
   Simple attributes
 -------------------------------------------------------------------------------}
 
-newtype Name = Name Text
+newtype Name = Name { getName :: String }
   deriving stock (Show, Eq, Ord, Data)
-  deriving Parse via AttrNode "Name" "Value" Text
+  deriving Parse via AttrNode "Name" "Value" String
 
-newtype Min a = Min a
+newtype Min a = Min { getMin :: a }
   deriving stock (Show, Eq, Ord, Data)
   deriving Parse via AttrNode "Min" "Value" a
 
-newtype Max a = Max a
+newtype Max a = Max { getMax :: a }
   deriving stock (Show, Eq, Ord, Data)
   deriving Parse via AttrNode "Max" "Value" a
 
-newtype SampleStart = SampleStart Int
+newtype SampleStart = SampleStart { getSampleStart :: Int }
   deriving stock (Show, Eq, Ord, Data)
   deriving Parse via AttrNode "SampleStart" "Value" Int
 
-newtype SampleEnd = SampleEnd Int
+newtype SampleEnd = SampleEnd { getSampleEnd :: Int }
   deriving stock (Show, Eq, Ord, Data)
   deriving Parse via AttrNode "SampleEnd" "Value" Int

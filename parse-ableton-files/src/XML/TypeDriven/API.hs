@@ -8,6 +8,8 @@ import Data.Typeable
 import Data.XML.Types (Name)
 import Text.XML.Stream.Parse (AttrParser)
 
+import qualified Data.Text as T
+
 import XML.Aux
 import XML.Parser
 
@@ -31,6 +33,9 @@ class ParseAttr a where
 
 instance ParseAttr Text where
   parseAttr = requireAttrCI
+
+instance ParseAttr String where
+  parseAttr = fmap T.unpack . parseAttr
 
 instance ParseAttr Int where
   parseAttr = attrRead

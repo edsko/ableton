@@ -1,5 +1,6 @@
 module CmdLine (
     Options(..)
+  , OptionsSummarise(..)
   , Command(..)
   , getOptions
   ) where
@@ -17,10 +18,19 @@ data Command =
     DumpParsed
 
     -- | Show all multi-sample parts
-  | ShowMultiSampleParts
+  | ShowMSP
 
     -- | Invert the multi-sample parts (from part of the sample to settings)
-  | InvertMultiSampleParts
+  | InvertMSP
+
+    -- | Summarise the multi-sample parts
+  | SummariseMSP OptionsSummarise
+  deriving (Show)
+
+data OptionsSummarise = OptionsSummarise {
+      -- | Collate overlapping velocity ranges (provided they have disjoint selectors)
+      optCollateVelocities :: Bool
+    }
   deriving (Show)
 
 getOptions :: IO Options
@@ -43,12 +53,20 @@ parseOptions = Options
 
 parseCommand :: Parser Command
 parseCommand = subparser $ mconcat [
-      aux "dump-parsed"             (pure DumpParsed)             "Dump parsed XML"
-    , aux "show-multisampleparts"   (pure ShowMultiSampleParts)   "Show all multi-sample parts"
-    , aux "invert-multisampleparts" (pure InvertMultiSampleParts) "Show mapping from sample range to multi-sample settings"
+      aux "dump-parsed"   (pure DumpParsed)                        "Dump parsed XML"
+    , aux "show-msp"      (pure ShowMSP)                           "Show all multi-sample parts"
+    , aux "invert-msp"    (pure InvertMSP)                         "Show mapping from sample range to multi-sample settings"
+    , aux "summarise-msp" (SummariseMSP <$> parseOptionsSummarise) "Summarise multi-sample parts"
     ]
   where
     aux :: String -> Parser Command -> String -> Mod CommandFields Command
     aux c p h = command c $ info (p <**> helper) $ mconcat [
           progDesc h
         ]
+
+parseOptionsSummarise :: Parser OptionsSummarise
+parseOptionsSummarise = OptionsSummarise
+    <$> (switch $ mconcat [
+             long "collate-velocities"
+           , help "Collate overlapping velocity ranges (provided they have disjoint selector ranges)"
+           ])

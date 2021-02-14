@@ -1,11 +1,23 @@
 module Util (
     repeatedly
   , splitOn
+  , splitSortedOn
   , splitFst
   , mergeAdjacent
+  , allEqualUpTo
+    -- * Pretty-printing
+  , bracket
+  , showSet
+  , showMap
   ) where
 
-import Data.List (foldl')
+import Control.Monad (guard)
+import Data.List (foldl', sortOn, intercalate)
+import Data.Map (Map)
+import Data.Set (Set)
+
+import qualified Data.Map as Map
+import qualified Data.Set as Set
 
 repeatedly :: (a -> b -> b) -> ([a] -> b -> b)
 repeatedly = flip . foldl' . flip
@@ -27,6 +39,10 @@ splitOn f = \case
                      if a == a' then                   go a  (b:bs) xs
                                 else (a, reverse bs) : go a' [b]    xs
 
+-- | Like 'splitOn', but sort the list first
+splitSortedOn :: Ord a => (x -> (a, b)) -> [x] -> [(a, [b])]
+splitSortedOn f = splitOn f . sortOn (fst . f)
+
 -- | Specialization of 'splitOn'
 splitFst :: Eq a => [(a, b)] -> [(a, [b])]
 splitFst = splitOn id
@@ -38,3 +54,25 @@ mergeAdjacent [(a, b)]                  = [(a, b)]
 mergeAdjacent ((a, b) : (a', b') : rest)
   | a == a'   = mergeAdjacent ((a, b <> b') : rest)
   | otherwise = (a, b) : mergeAdjacent ((a', b') : rest)
+
+allEqualUpTo :: Eq b => (a -> b) -> [a] -> Maybe b
+allEqualUpTo f as =
+    case map f as of
+      []   -> error "allEqualUpTo: empty list"
+      b:bs -> guard (all (== b) bs) >> return b
+
+{-------------------------------------------------------------------------------
+  Pretty-printing
+-------------------------------------------------------------------------------}
+
+bracket :: Char -> Char -> String -> String
+bracket l r xs = l : xs ++ [r]
+
+showSet :: (a -> String) -> Set a -> String
+showSet f = bracket '[' ']' . intercalate "," . map f . Set.toList
+
+showMap :: forall k v. (k -> String) -> (v -> String) -> Map k v -> String
+showMap f g = bracket '[' ']' . intercalate "," . map showElem . Map.toList
+  where
+    showElem :: (k, v) -> String
+    showElem (k, v) = bracket '(' ')' $ intercalate "," [f k, g v]

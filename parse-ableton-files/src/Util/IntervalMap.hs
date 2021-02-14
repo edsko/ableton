@@ -2,6 +2,7 @@ module Util.IntervalMap (
     intervalsIntersect
   , toList
   , fromList
+  , showInterval
   ) where
 
 import Data.IntervalMap.FingerTree (IntervalMap, Interval(..))
@@ -36,3 +37,6 @@ toList xs =
 
 fromList :: Ord v => [(Interval v, a)] -> IntervalMap v a
 fromList as = repeatedly (uncurry IM.insert) as IM.empty
+
+showInterval :: Show v => Interval v -> String
+showInterval (Interval fr to) = concat [show fr, "-", show to]
