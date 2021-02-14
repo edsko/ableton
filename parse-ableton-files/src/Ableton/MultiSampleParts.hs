@@ -31,6 +31,8 @@ import Util
 import Util.SOP
 import Util.SYB
 
+import qualified Util.IntervalMap as IM
+
 {-------------------------------------------------------------------------------
   Our own view on multi-sample parts
 -------------------------------------------------------------------------------}
@@ -107,9 +109,9 @@ stats msps = InvStats {
 
     -- Both ends of the range are inclusive
     overlaps :: MSP -> MSP -> Maybe (MSP, MSP, RecordDiff MSP)
-    overlaps x@MSP{range = (_, SampleEnd to)}
-             y@MSP{range = (SampleStart fr', _)} = do
-        guard $ fr' <= to
+    overlaps x@MSP{range = (SampleStart fr , SampleEnd to )}
+             y@MSP{range = (SampleStart fr', SampleEnd to')} = do
+        guard $ IM.intervalsIntersect (Interval fr to) (Interval fr' to')
         return (x, y, recordDiff x y)
 
     isNonSingletonKey :: MSP -> Bool
