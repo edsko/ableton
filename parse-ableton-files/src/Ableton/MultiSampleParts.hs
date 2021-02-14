@@ -77,8 +77,11 @@ invertMultiSampleParts =
 -------------------------------------------------------------------------------}
 
 data InvStats = InvStats {
-      -- | Is the same /part/ of the same used multiple times?
-      overlaps :: Bool
+      -- | Does /part/ of one sample range overlap with /part/ of another?
+      overlapPartSampleRange :: Bool
+
+      -- | Is the /same/ sample range used for multiple parts?
+    , overlapFullSampleRange :: Bool
 
       -- | Are there samples that are used for non-singleton key ranges?
       --
@@ -93,9 +96,14 @@ data InvStats = InvStats {
 
 multiSampleStats :: PerOffset [InvMSP] -> InvStats
 multiSampleStats msps = InvStats {
-      overlaps         = checkOverlap $ map fst (IM.toList msps)
-    , nonSingletonKeys = any (any isNonSingletonKey) msps
-    , supportedKeys    = Set.fromList $ foldMap (concatMap sampleKeyRanges) msps
+      overlapPartSampleRange =
+        checkOverlap $ map fst (IM.toList msps)
+    , overlapFullSampleRange =
+        any (\xs -> length xs > 1) msps
+    , nonSingletonKeys =
+        any (any isNonSingletonKey) msps
+    , supportedKeys =
+        Set.fromList $ foldMap (concatMap sampleKeyRanges) msps
     }
   where
     checkOverlap :: [Interval Int] -> Bool
