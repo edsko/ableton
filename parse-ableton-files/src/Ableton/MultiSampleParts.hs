@@ -6,6 +6,7 @@
 module Ableton.MultiSampleParts (
     allMultiSampleParts
   , invertMultiSampleParts
+  , multiSampleStats
   ) where
 
 import Data.Map (Map)
@@ -72,17 +73,10 @@ data InvStats = InvStats {
     }
   deriving (Show)
 
-invertMultiSampleParts ::
-     [MSP]
-  -> ( PerSample (PerOffset MSP)
-     , PerSample InvStats
-     )
+invertMultiSampleParts :: [MSP] -> PerSample (PerOffset MSP)
 invertMultiSampleParts xs =
-    (inverted, stats <$> inverted)
+    repeatedly insert xs Map.empty
   where
-    inverted :: PerSample (PerOffset MSP)
-    inverted = repeatedly insert xs Map.empty
-
     insert ::
          MSP
       -> PerSample (PerOffset MSP)
@@ -97,8 +91,8 @@ invertMultiSampleParts xs =
     insert' MSP{range = (SampleStart fr, SampleEnd to), ..} =
         IM.insert (Interval fr to) InvMSP{..}
 
-stats :: PerOffset MSP -> InvStats
-stats msps = InvStats {
+multiSampleStats :: PerOffset MSP -> InvStats
+multiSampleStats msps = InvStats {
       overlaps         = checkOverlap $ IM.toList msps
     , nonSingletonKeys = any isNonSingletonKey msps
     , supportedKeys    = Set.fromList $ foldMap sampleKeyRanges msps

@@ -29,7 +29,6 @@ main = do
           ShowMultiSampleParts -> do
             print $ allMultiSampleParts parsed
           InvertMultiSampleParts -> do
-            let (inverted, stats) = invertMultiSampleParts $
-                                      allMultiSampleParts parsed
+            let inverted = invertMultiSampleParts $ allMultiSampleParts parsed
             print $ IM.toList <$> inverted
-            print $ stats
+            print $ multiSampleStats <$> inverted
