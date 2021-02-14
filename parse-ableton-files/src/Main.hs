@@ -7,7 +7,9 @@ import Text.XML.Stream.Parse
 import Ableton.MultiSampleParts
 import CmdLine
 import XML.TypeDriven
-import qualified XML.Parser as P
+
+import qualified Util.IntervalMap as IM
+import qualified XML.Parser       as P
 
 main :: IO ()
 main = do
@@ -29,5 +31,5 @@ main = do
           InvertMultiSampleParts -> do
             let (inverted, stats) = invertMultiSampleParts $
                                       allMultiSampleParts parsed
-            print inverted
-            print stats
+            print $ IM.toList <$> inverted
+            print $ stats

@@ -8,11 +8,6 @@ module Ableton.MultiSampleParts (
   , invertMultiSampleParts
   ) where
 
-import Prelude hiding (id)
-import qualified Prelude
-
-import Control.Monad (guard)
-import Data.Foldable (toList)
 import Data.Map (Map)
 import Data.Maybe (fromMaybe)
 import Data.IntervalMap.FingerTree (IntervalMap, Interval(..))
@@ -51,12 +46,20 @@ data MSP = MSP {
   Inverted view: from sample range to settings
 -------------------------------------------------------------------------------}
 
+data InvMSP = InvMSP {
+      chain    :: Name
+    , key      :: (MidiNote, MidiNote)
+    , velocity :: (Int, Int)
+    , selector :: (Int, Int)
+    }
+  deriving (Show, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
+
 type PerSample a = Map Name a
-type PerOffset a = IntervalMap Int MSP
+type PerOffset a = IntervalMap Int InvMSP
 
 data InvStats = InvStats {
       -- | Is the same part of the same used multiple times?
-      overlaps :: [(MSP, MSP, RecordDiff MSP)]
+      overlaps :: [(Interval Int, Interval Int, RecordDiff InvMSP)]
 
       -- | Are there samples that are used for non-singleton key ranges?
       --
@@ -91,34 +94,32 @@ invertMultiSampleParts xs =
          MSP
       -> PerOffset MSP
       -> PerOffset MSP
-    insert' msp@MSP{range = (SampleStart fr, SampleEnd to)} =
-        IM.insert (Interval fr to) msp
+    insert' MSP{range = (SampleStart fr, SampleEnd to), ..} =
+        IM.insert (Interval fr to) InvMSP{..}
 
 stats :: PerOffset MSP -> InvStats
 stats msps = InvStats {
-      overlaps         = checkOverlap $ toList msps
+      overlaps         = checkOverlap $ IM.toList msps
     , nonSingletonKeys = any isNonSingletonKey msps
     , supportedKeys    = Set.fromList $ foldMap sampleKeyRanges msps
     }
   where
-    checkOverlap :: [MSP] -> [(MSP, MSP, RecordDiff MSP)]
-    checkOverlap []       = []
-    checkOverlap [_]      = []
-    checkOverlap (x:y:zs) = maybe Prelude.id (:) (overlaps x y)
-                          $ checkOverlap (y:zs)
+    checkOverlap ::
+         [(Interval Int, InvMSP)]
+      -> [(Interval Int, Interval Int, RecordDiff InvMSP)]
+    checkOverlap []                      = []
+    checkOverlap [_]                     = []
+    checkOverlap ((i, x) : (i', y) : zs)
+            | IM.intervalsIntersect i i' =
+                 (i, i', recordDiff x y) : checkOverlap ((i', y) : zs)
+            | otherwise                  =
+                                           checkOverlap ((i', y) : zs)
 
-    -- Both ends of the range are inclusive
-    overlaps :: MSP -> MSP -> Maybe (MSP, MSP, RecordDiff MSP)
-    overlaps x@MSP{range = (SampleStart fr , SampleEnd to )}
-             y@MSP{range = (SampleStart fr', SampleEnd to')} = do
-        guard $ IM.intervalsIntersect (Interval fr to) (Interval fr' to')
-        return (x, y, recordDiff x y)
+    isNonSingletonKey :: InvMSP -> Bool
+    isNonSingletonKey InvMSP{key = (fr, to)} = fr /= to
 
-    isNonSingletonKey :: MSP -> Bool
-    isNonSingletonKey MSP{key = (fr, to)} = fr /= to
-
-    sampleKeyRanges :: MSP -> [MidiNote]
-    sampleKeyRanges MSP{key = (fr, to)} = [fr .. to]
+    sampleKeyRanges :: InvMSP -> [MidiNote]
+    sampleKeyRanges InvMSP{key = (fr, to)} = [fr .. to]
 
 {-------------------------------------------------------------------------------
   Translate from the XML structure into our own more manageable type
