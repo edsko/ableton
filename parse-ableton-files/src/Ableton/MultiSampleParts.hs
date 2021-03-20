@@ -4,7 +4,8 @@
 --
 -- This is useful to analyse an xisting Sampler instance.
 module Ableton.MultiSampleParts (
-    allMSP
+    MSP(..)
+  , allMSP
   , invertMSP
   , statsMSP
   , summariseMSP

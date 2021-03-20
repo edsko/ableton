@@ -12,9 +12,11 @@ executable parse-ableton
                        Ableton.Schema
                        Ableton.Types
                        CmdLine
+                       LUTs
                        Util
                        Util.Interval
                        Util.Interval.Map
+                       Util.Interval.Split
                        Util.SOP
                        Util.SYB
                        XML.Aux

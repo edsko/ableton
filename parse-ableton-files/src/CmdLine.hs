@@ -25,6 +25,9 @@ data Command =
 
     -- | Summarise the multi-sample parts
   | SummariseMSP OptionsSummarise
+
+    -- | Create LUTs for use in ks-sampler
+  | CreateLUTs
   deriving (Show)
 
 data OptionsSummarise = OptionsSummarise {
@@ -57,6 +60,7 @@ parseCommand = subparser $ mconcat [
     , aux "show-msp"      (pure ShowMSP)                           "Show all multi-sample parts"
     , aux "invert-msp"    (pure InvertMSP)                         "Show mapping from sample range to multi-sample settings"
     , aux "summarise-msp" (SummariseMSP <$> parseOptionsSummarise) "Summarise multi-sample parts"
+    , aux "create-luts"   (pure CreateLUTs)                        "Create LUTs for use in ks-sampler"
     ]
   where
     aux :: String -> Parser Command -> String -> Mod CommandFields Command

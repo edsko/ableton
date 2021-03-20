@@ -6,6 +6,7 @@ import Text.XML.Stream.Parse
 
 import Ableton.MultiSampleParts
 import CmdLine
+import LUTs
 import Util.Interval.Map qualified as IM
 import XML.Parser qualified as P
 import XML.TypeDriven
@@ -34,3 +35,5 @@ main = do
           SummariseMSP options -> do
             let inverted = invertMSP $ allMSP parsed
             print $ summariseMSP options inverted
+          CreateLUTs ->
+            createLUTs (allMSP parsed)
