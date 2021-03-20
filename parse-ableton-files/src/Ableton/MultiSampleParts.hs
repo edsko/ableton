@@ -28,7 +28,7 @@ import Ableton.Types
 import CmdLine
 import Util
 import Util.Interval
-import Util.IntervalMap qualified as IM
+import Util.Interval.Map qualified as IM
 import Util.SYB
 import XML.TypeDriven
 

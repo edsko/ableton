@@ -6,7 +6,7 @@ import Text.XML.Stream.Parse
 
 import Ableton.MultiSampleParts
 import CmdLine
-import Util.IntervalMap qualified as IM
+import Util.Interval.Map qualified as IM
 import XML.Parser qualified as P
 import XML.TypeDriven
 

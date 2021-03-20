@@ -1,4 +1,4 @@
-module Util.IntervalMap (
+module Util.Interval.Map (
     toList
   , fromList
   ) where

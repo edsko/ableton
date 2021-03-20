@@ -14,7 +14,7 @@ executable parse-ableton
                        CmdLine
                        Util
                        Util.Interval
-                       Util.IntervalMap
+                       Util.Interval.Map
                        Util.SOP
                        Util.SYB
                        XML.Aux
