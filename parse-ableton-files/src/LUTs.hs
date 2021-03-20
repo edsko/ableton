@@ -21,9 +21,10 @@ import Util.Interval.Split qualified as Split
 createLUTs :: [MSP] -> IO ()
 createLUTs msps = do
     writeFile "out/LUTs.log" $ show luts
+    writeFile "out/rangeIDs.log" $ show rangeIds
     writeFile "out/statistics.log" $ unlines [
         "# Statistics"
-      , "Number of different sample ranges: " ++ show (Map.size sampleRanges)
+      , "Number of different sample ranges: " ++ show (Map.size sampleIds)
       , "## Distribution over the various ranges"
       , "Unique combinations: " ++ show (product [
             Split.size splitSelector
@@ -47,37 +48,40 @@ createLUTs msps = do
     luts :: LUTs
     luts@LUTs{..} = simplify $ repeatedly insert msps empty
 
+    rangeIds :: RangeIds
+    rangeIds = assignRangeIds luts
+
 data LUTs = LUTs {
       -- | Unique ID assigned to each sample range
-      sampleRanges :: Map SampleRange SampleRangeId
+      sampleIds :: Map SampleRange SampleId
 
       -- | Split (non-overlapping) selector ranges
-    , splitSelector :: Split Int (Set SampleRangeId)
+    , splitSelector :: Split Int (Set SampleId)
 
       -- | Split key ranges
-    , splitKey :: Split MidiNote (Set SampleRangeId)
+    , splitKey :: Split MidiNote (Set SampleId)
 
       -- | Split velocity ranges
-    , splitVelocity :: Split Int (Set SampleRangeId)
+    , splitVelocity :: Split Int (Set SampleId)
 
       -- | Split articulation ranges
-    , splitChain :: Split Int (Set SampleRangeId)
+    , splitChain :: Split Int (Set SampleId)
 
-      -- | All unique sample ranges in the original data
+      -- | Unique selector ranges in the original data (possibly overlapping)
     , uniqueSelector :: Set (Interval Int)
 
-      -- | All unique key ranges in the original data
+      -- | Unique key ranges in the original data (possibly overlapping)
     , uniqueKey :: Set (Interval MidiNote)
 
-      -- | All unique velocity ranges in the original data
+      -- | Unique velocity ranges in the original data (possibly overlapping)
     , uniqueVelocity :: Set (Interval Int)
 
-      -- | All unique articulatiomn ranges
+      -- | Unique chain ranges in the original data (possibly overlapping)
     , uniqueChain :: Set (Name, Interval Int)
     }
   deriving (Show)
 
-newtype SampleRangeId = SampleRangeId Int
+newtype SampleId = SampleId Int
   deriving newtype (Show, Eq, Ord)
 
 data SampleRange = SampleRange {
@@ -88,7 +92,7 @@ data SampleRange = SampleRange {
 
 empty :: LUTs
 empty = LUTs {
-      sampleRanges   = Map.empty
+      sampleIds      = Map.empty
     , splitSelector  = Split.empty
     , splitKey       = Split.empty
     , splitVelocity  = Split.empty
@@ -101,31 +105,72 @@ empty = LUTs {
 
 insert :: MSP -> LUTs -> LUTs
 insert MSP{..} LUTs{..} = LUTs{
-      sampleRanges       = Map.insert sampleRange sampleRangeId sampleRanges
-    , splitSelector      = modifySplit selector     splitSelector
-    , splitKey           = modifySplit key          splitKey
-    , splitVelocity      = modifySplit velocity     splitVelocity
-    , splitChain         = modifySplit chainRange   splitChain
-    , uniqueSelector     = Set.insert selector            uniqueSelector
-    , uniqueKey          = Set.insert key                 uniqueKey
-    , uniqueVelocity     = Set.insert velocity            uniqueVelocity
-    , uniqueChain        = Set.insert (chain, chainRange) uniqueChain
+      sampleIds      = Map.insert sampleRange sampleId sampleIds
+    , splitSelector  = modifySplit selector   splitSelector
+    , splitKey       = modifySplit key        splitKey
+    , splitVelocity  = modifySplit velocity   splitVelocity
+    , splitChain     = modifySplit chainRange splitChain
+    , uniqueSelector = Set.insert selector            uniqueSelector
+    , uniqueKey      = Set.insert key                 uniqueKey
+    , uniqueVelocity = Set.insert velocity            uniqueVelocity
+    , uniqueChain    = Set.insert (chain, chainRange) uniqueChain
     }
   where
     modifySplit ::
          (Ord v, Enum v)
       => Interval v
-      -> Split v (Set SampleRangeId) -> Split v (Set SampleRangeId)
-    modifySplit = Split.modify Set.empty (Set.insert sampleRangeId)
+      -> Split v (Set SampleId) -> Split v (Set SampleId)
+    modifySplit = Split.modify Set.empty (Set.insert sampleId)
 
     sampleRange :: SampleRange
     sampleRange = SampleRange { sample = sample, range = range }
 
-    sampleRangeId :: SampleRangeId
-    sampleRangeId =
-        case Map.lookup sampleRange sampleRanges of
-          Nothing -> SampleRangeId $ Map.size sampleRanges
+    sampleId :: SampleId
+    sampleId =
+        case Map.lookup sampleRange sampleIds of
+          Nothing -> SampleId $ Map.size sampleIds
           Just id -> id
+
+{-------------------------------------------------------------------------------
+  Assign IDs to each range
+-------------------------------------------------------------------------------}
+
+newtype RangeIdSelector = RangeIdSelector Int deriving newtype (Show, Num)
+newtype RangeIdKey      = RangeIdKey      Int deriving newtype (Show, Num)
+newtype RangeIdVelocity = RangeIdVelocity Int deriving newtype (Show, Num)
+newtype RangeIdChain    = RangeIdChain    Int deriving newtype (Show, Num)
+
+-- | Range IDs
+--
+-- Once all data is processed, we assign a unique ID to each /split/ range.
+-- It is this range ID that the LUTs work with.
+data RangeIds = RangeIds {
+      -- | Unique ID assigned to each selector range
+      rangesSelector :: Map (Interval Int) RangeIdSelector
+
+      -- | Unique ID assigned to each key range
+    , rangesKey :: Map (Interval MidiNote) RangeIdKey
+
+      -- | Unique ID assigned to each velocity range
+    , rangesVelocity :: Map (Interval Int) RangeIdVelocity
+
+      -- | Unique ID assigned to each chain range
+    , rangesChain :: Map (Interval Int) RangeIdChain
+    }
+  deriving (Show)
+
+assignRangeIds :: LUTs -> RangeIds
+assignRangeIds LUTs{..} = RangeIds {
+      rangesSelector = numberRanges splitSelector
+    , rangesKey      = numberRanges splitKey
+    , rangesVelocity = numberRanges splitVelocity
+    , rangesChain    = numberRanges splitChain
+    }
+  where
+    numberRanges :: (Ord v, Num b) => Split v a -> Map (Interval v) b
+    numberRanges xs =
+        Map.fromList $
+          zip (Set.toList (Split.keysSet xs)) (map fromInteger [0..])
 
 {-------------------------------------------------------------------------------
   Simplification
@@ -161,7 +206,7 @@ data Overlap a = Overlap {
     }
   deriving (Show, Functor)
 
-overlaps :: LUTs -> [Overlap SampleRangeId]
+overlaps :: LUTs -> [Overlap SampleId]
 overlaps LUTs{..} = [
         overlap
       | (selector, samplesForSelector) <- Split.toList splitSelector
