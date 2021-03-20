@@ -3,15 +3,17 @@
 -- > import Util.Interval (Interval(..))
 -- > import Util.Interval qualified as I
 module Util.Interval (
-    intersects
+    Interval(..)
+    -- * Construction
   , union
-  , pretty
   , nonEmpty
-    -- * Re-exports
-  , Interval(..)
+  , point
+    -- * Query
+  , intersects
+  , pretty
+  , contains
   , high
   , low
-  , point
   ) where
 
 import Data.IntervalMap.FingerTree (Interval(..), high, low, point)
@@ -49,3 +51,6 @@ nonEmpty :: (HasCallStack, Ord v) => v -> v -> Interval v
 nonEmpty fr to
   | fr <= to  = Interval fr to
   | otherwise = error "nonEmpty: not an empty interval"
+
+contains :: Ord v => Interval v -> v -> Bool
+contains (Interval fr to) x = fr <= x && x <= to

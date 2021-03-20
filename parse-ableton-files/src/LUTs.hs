@@ -43,13 +43,24 @@ createLUTs msps = do
       , "## Ambiguous combinations"
       , show $ overlaps luts
       ]
-    writeFile "out/selector_range_id.table" (toRangeId $ Split.keysSet splitSelector)
+
+    -- Write input -> range ID tables
+    writeFile "out/range_id_selector.table" (toRangeId rangesSelector)
+    writeFile "out/range_id_key.table"      (toRangeId rangesKey)
+    writeFile "out/range_id_velocity.table" (toRangeId rangesVelocity)
+    writeFile "out/range_id_chain.table"    (toRangeId rangesChain)
+
+    -- Range IDs -> matching sample ID collections
+    writeFile "out/samples_selector.coll" (matchingRangeId rangesSelector splitSelector)
+    writeFile "out/samples_key.coll"      (matchingRangeId rangesKey      splitKey)
+    writeFile "out/samples_velocity.coll" (matchingRangeId rangesVelocity splitVelocity)
+    writeFile "out/samples_chain.coll"    (matchingRangeId rangesChain    splitChain)
   where
     luts :: LUTs
     luts@LUTs{..} = simplify $ repeatedly insert msps empty
 
     rangeIds :: RangeIds
-    rangeIds = assignRangeIds luts
+    rangeIds@RangeIds{..} = assignRangeIds luts
 
 data LUTs = LUTs {
       -- | Unique ID assigned to each sample range
@@ -144,6 +155,8 @@ newtype RangeIdChain    = RangeIdChain    Int deriving newtype (Show, Num)
 --
 -- Once all data is processed, we assign a unique ID to each /split/ range.
 -- It is this range ID that the LUTs work with.
+--
+-- Range IDs are assigned starting from 1, reserving 0 for "no matching range".
 data RangeIds = RangeIds {
       -- | Unique ID assigned to each selector range
       rangesSelector :: Map (Interval Int) RangeIdSelector
@@ -170,7 +183,7 @@ assignRangeIds LUTs{..} = RangeIds {
     numberRanges :: (Ord v, Num b) => Split v a -> Map (Interval v) b
     numberRanges xs =
         Map.fromList $
-          zip (Set.toList (Split.keysSet xs)) (map fromInteger [0..])
+          zip (Set.toList (Split.keysSet xs)) (map fromInteger [1..])
 
 {-------------------------------------------------------------------------------
   Simplification
@@ -233,5 +246,30 @@ overlaps LUTs{..} = [
   Generate JavaScript
 -------------------------------------------------------------------------------}
 
-toRangeId :: Set (Interval Int) -> String
-toRangeId _ = "table"
+toRangeId :: forall a id.
+     (Ord a, Enum a, Show id, Num id)
+  => Map (Interval a) id -> String
+toRangeId ids = unwords ("table" : map show ranges)
+  where
+    ranges :: [id]
+    ranges = [
+          case select x of
+            []  -> 0 -- Not found
+            [i] -> i
+            _   -> error "toRangeId: Multiple matches"
+        | x <- map toEnum [0 .. 127]
+        ]
+
+    select :: a -> [id]
+    select x = map snd $ filter ((`I.contains` x) . fst) (Map.toList ids)
+
+matchingRangeId ::
+     (Show id, Ord a)
+  => Map (Interval a) id
+  -> Split a (Set SampleId)
+  -> String
+matchingRangeId ids ranges = unlines [
+      show id ++ ", " ++ unwords (map show $ Set.toList samples) ++ ";"
+    | (i, id) <- Map.toList ids
+    , Just samples <- [Split.lookup i ranges]
+    ]

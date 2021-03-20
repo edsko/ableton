@@ -8,7 +8,10 @@ module Util.Interval.Split (
   , size
   , toList
   , keysSet
+  , lookup
   ) where
+
+import Prelude hiding (lookup)
 
 import Data.Map (Map)
 import Data.Map qualified as Map
@@ -68,6 +71,9 @@ toList = Map.toList . toMap
 
 keysSet :: Split v a -> Set (Interval v)
 keysSet = Map.keysSet . toMap
+
+lookup :: Ord v => Interval v -> Split v a -> Maybe a
+lookup i = Map.lookup i . toMap
 
 {-------------------------------------------------------------------------------
   Auxiliary
