@@ -13,6 +13,7 @@ executable parse-ableton
                        Ableton.Types
                        CmdLine
                        Util
+                       Util.Interval
                        Util.IntervalMap
                        Util.SOP
                        Util.SYB

@@ -12,7 +12,7 @@ module Ableton.MultiSampleParts (
 
 import Control.Monad.State (State)
 import Data.Bifunctor
-import Data.IntervalMap.FingerTree (IntervalMap, Interval(..))
+import Data.IntervalMap.FingerTree (IntervalMap)
 import Data.List (sortOn, intercalate)
 import Data.Map (Map)
 import Data.Set (Set)
@@ -29,6 +29,7 @@ import Ableton.Types
 import CmdLine
 import XML.TypeDriven
 import Util
+import Util.Interval
 import Util.SYB
 
 import qualified Util.IntervalMap as IM
@@ -113,7 +114,7 @@ statsMSP msps = InvStats {
     checkOverlap :: [Interval Int] -> Bool
     checkOverlap []        = False
     checkOverlap [_]       = False
-    checkOverlap (i:i':is) = IM.intervalsIntersect i i' || checkOverlap (i':is)
+    checkOverlap (i:i':is) = intersects i i' || checkOverlap (i':is)
 
     isNonSingletonKey :: InvMSP -> Bool
     isNonSingletonKey InvMSP{key = (fr, to)} = fr /= to
@@ -163,13 +164,13 @@ instance Show NoteSummary where
 
 instance Show ChainSummary where
   show (ChainSummary vs) = intercalate " " $ [
-        showMap (showSet IM.showInterval) show vs
+        showMap (showSet showInterval) show vs
       , "(" ++ show (Map.size vs) ++ " velocities,"
       , show (sum (map velocitySummarySize (Map.elems vs))) ++ " total samples)"
       ]
 
 instance Show VelocitySummary where
-  show (VelocitySummary vs) = showSet IM.showInterval vs
+  show (VelocitySummary vs) = showSet showInterval vs
 
 summariseMSP ::
      OptionsSummarise
@@ -229,7 +230,7 @@ summariseMSP OptionsSummarise{..} = \msps ->
            -> [(Set (Interval Int), VelocitySummary)]
         go (is, acc) [] = [(is, VelocitySummary acc)]
         go (is, acc) ((i, Set.fromList -> xs) : xss)
-          | any (IM.intervalsIntersect i) is
+          | any (intersects i) is
           , Set.disjoint acc xs
           = go (Set.insert i is, acc `Set.union` xs) xss
           | otherwise
