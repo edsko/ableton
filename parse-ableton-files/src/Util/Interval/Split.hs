@@ -1,14 +1,19 @@
 module Util.Interval.Split (
     Split
+    -- * Construction
   , empty
   , modify
+  , mergeAdjacentIf
+    -- * Query
   , size
+  , toList
   ) where
 
 import Data.Map (Map)
 import Data.Map qualified as Map
 
-import Util.Interval
+import Util.Interval (Interval)
+import Util.Interval qualified as I
 
 -- | Map intervals to values
 --
@@ -25,14 +30,31 @@ empty = Split Map.empty
 size :: Split v a -> Int
 size = Map.size . toMap
 
+toList :: Split v a -> [(Interval v, a)]
+toList = Map.toList . toMap
+
 modify ::
     (Ord v, Enum v)
   => a         -- ^ Initial value
   -> (a -> a)  -- ^ Update (applied to initial value if no value present)
   -> Interval v -> Split v a -> Split v a
 modify e f i (Split im) = Split $
-    let (intersect_i, rest) = Map.partitionWithKey (const . intersects i) im
+    let (intersect_i, rest) = Map.partitionWithKey (const . I.intersects i) im
     in Map.union (split e f i (Map.toList intersect_i)) rest
+
+mergeAdjacentIf :: forall v a.
+     Ord v
+  => ((Interval v, a) -> (Interval v, a) -> Maybe (Interval v, a))
+  -> Split v a -> Split v a
+mergeAdjacentIf f =
+    Split . Map.fromList . go . toList
+  where
+    go :: [(Interval v, a)] -> [(Interval v, a)]
+    go []  = []
+    go [x] = [x]
+    go (x : y : zs)
+      | Just xy' <- f x y = go (xy' : zs)
+      | otherwise         = x : go (y : zs)
 
 {-------------------------------------------------------------------------------
   Auxiliary
@@ -61,11 +83,11 @@ split e f = \i -> Map.fromList . go i
 
       -- >  {...i...}
       -- >             {...j...}
-      | high i < low j =
+      | I.high i < I.low j =
           error "split: PRE1.a"
       -- >             {...i...}
       -- >  {...j...}
-      | high j < low i =
+      | I.high j < I.low i =
           error "split: PRE1.b"
 
       --
@@ -74,18 +96,18 @@ split e f = \i -> Map.fromList . go i
 
       -- >  {...i...}     or  {...i...}
       -- >     {...j...}        {.j.}
-      | low i < low j =
+      | I.low i < I.low j =
           -- > low i <= pred (low j)   (from guard)
           -- > low j <= high i         (from PRE1.a)
-            (nonEmpty (low i) (pred (low j)), f e)
-          : go (nonEmpty (low j) (high i)) js
+            (I.nonEmpty (I.low i) (pred (I.low j)), f e)
+          : go (I.nonEmpty (I.low j) (I.high i)) js
       -- >     {...i...}  or    {.i.}
       -- >  {...j...}         {...j...}
-      | low j < low i =
+      | I.low j < I.low i =
           -- > low j <= pred (low i)   (from guard)
           -- > low i <= high j         (from PRE1.b)
-            (nonEmpty (low j) (pred (low i)), a)
-          : go i ((nonEmpty (low i) (high j), a) : js')
+            (I.nonEmpty (I.low j) (pred (I.low i)), a)
+          : go i ((I.nonEmpty (I.low i) (I.high j), a) : js')
 
       --
       -- At this point we have established the lower bounds are equal
@@ -93,20 +115,20 @@ split e f = \i -> Map.fromList . go i
 
       -- > {.i.}
       -- > {...j...}
-      | high i < high j =
+      | I.high i < I.high j =
           -- > low j         <= high i   (from PRE1.a)
           -- > succ (high i) <= high j   (from guard)
-            (nonEmpty (low j) (high i), f a)
-          : (nonEmpty (succ (high i)) (high j), a)
+            (I.nonEmpty (I.low j) (I.high i), f a)
+          : (I.nonEmpty (succ (I.high i)) (I.high j), a)
           : js'
 
       -- >  {...i...}
       -- >  {.j.}
-      | high j < high i =
+      | I.high j < I.high i =
            -- > low i         <= high j   (from PRE1.b)
            -- > succ (high j) <= high i   (from guard)
-            (nonEmpty (low i) (high j), f a)
-          : go (nonEmpty (succ (high j)) (high i)) js'
+            (I.nonEmpty (I.low i) (I.high j), f a)
+          : go (I.nonEmpty (succ (I.high j)) (I.high i)) js'
 
       -- high j == high i
       -- > {..i..}

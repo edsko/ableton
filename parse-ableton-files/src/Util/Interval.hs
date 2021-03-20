@@ -1,6 +1,11 @@
+-- | Intended for qualified import
+--
+-- > import Util.Interval (Interval(..))
+-- > import Util.Interval qualified as I
 module Util.Interval (
     intersects
-  , showInterval
+  , union
+  , pretty
   , nonEmpty
     -- * Re-exports
   , Interval(..)
@@ -30,8 +35,12 @@ intersects (Interval fr to) (Interval fr' to') =
        (fr  <= fr' && fr' <= to ) -- (A) or (C)
     || (fr' <= fr  && fr  <= to') -- (B) or (D)
 
-showInterval :: Show v => Interval v -> String
-showInterval (Interval fr to) = concat [show fr, "-", show to]
+union :: Ord v => Interval v -> Interval v -> Interval v
+union (Interval fr to) (Interval fr' to') =
+    Interval (min fr fr') (max to to')
+
+pretty :: Show v => Interval v -> String
+pretty (Interval fr to) = concat [show fr, "-", show to]
 
 -- | Make non-empty interval
 --

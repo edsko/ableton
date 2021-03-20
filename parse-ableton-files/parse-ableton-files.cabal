@@ -48,6 +48,7 @@ executable parse-ableton
                        DataKinds
                        DeriveAnyClass
                        DeriveDataTypeable
+                       DeriveFunctor
                        DeriveGeneric
                        DerivingStrategies
                        DerivingVia
