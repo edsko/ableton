@@ -11,28 +11,26 @@ module Ableton.MultiSampleParts (
   ) where
 
 import Control.Monad.State (State)
+import Control.Monad.State qualified as State
 import Data.Bifunctor
+import Data.Foldable qualified as Foldable
 import Data.IntervalMap.FingerTree (IntervalMap)
 import Data.List (sortOn, intercalate)
 import Data.Map (Map)
+import Data.Map qualified as Map
 import Data.Set (Set)
-
-import qualified Control.Monad.State as State
-import qualified Data.Foldable       as Foldable
-import qualified Data.Map            as Map
-import qualified Data.Set            as Set
-import qualified GHC.Generics        as GHC
-import qualified Generics.SOP        as SOP
+import Data.Set qualified as Set
+import GHC.Generics qualified as GHC
+import Generics.SOP qualified as SOP
 
 import Ableton.Schema
 import Ableton.Types
 import CmdLine
-import XML.TypeDriven
 import Util
 import Util.Interval
+import Util.IntervalMap qualified as IM
 import Util.SYB
-
-import qualified Util.IntervalMap as IM
+import XML.TypeDriven
 
 {-------------------------------------------------------------------------------
   Our own view on multi-sample parts

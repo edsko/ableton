@@ -4,11 +4,10 @@ module XML.TypeDriven.API (
   ) where
 
 import Data.Text (Text)
+import Data.Text qualified as T
 import Data.Typeable
 import Data.XML.Types (Name)
 import Text.XML.Stream.Parse (AttrParser)
-
-import qualified Data.Text as T
 
 import XML.Aux
 import XML.Parser

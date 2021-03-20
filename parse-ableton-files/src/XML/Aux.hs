@@ -15,10 +15,9 @@ module XML.Aux (
 import Control.Monad (guard)
 import Data.Function (on)
 import Data.Text (Text)
+import Data.Text qualified as T
 import Data.XML.Types
 import Text.Read (readMaybe)
-
-import qualified Data.Text as T
 
 import Text.XML.Stream.Parse
 

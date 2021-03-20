@@ -4,7 +4,7 @@ module Util.IntervalMap (
   ) where
 
 import Data.IntervalMap.FingerTree (IntervalMap, Interval(..))
-import qualified Data.IntervalMap.FingerTree as IM
+import Data.IntervalMap.FingerTree qualified as IM
 
 import Util
 

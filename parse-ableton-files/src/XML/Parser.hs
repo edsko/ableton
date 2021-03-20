@@ -21,7 +21,7 @@ import Data.XML.Types
 import Data.String (fromString)
 
 import Text.XML.Stream.Parse (AttrParser, NameMatcher)
-import qualified Text.XML.Stream.Parse as X
+import Text.XML.Stream.Parse qualified as X
 
 newtype Parser a = Parser { runParser :: ConduitT Event Void IO a }
   deriving newtype (Functor, Applicative, Monad, MonadThrow)

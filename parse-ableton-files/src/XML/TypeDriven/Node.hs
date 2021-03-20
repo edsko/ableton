@@ -22,8 +22,8 @@ import Text.XML.Stream.Parse
 
 import Util.SOP
 import XML.Parser (Parser)
+import XML.Parser qualified as P
 import XML.TypeDriven.API
-import qualified XML.Parser as P
 
 {-------------------------------------------------------------------------------
   Nodes

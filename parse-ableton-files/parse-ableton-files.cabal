@@ -55,6 +55,7 @@ executable parse-ableton
                        FlexibleInstances
                        GADTs
                        GeneralizedNewtypeDeriving
+                       ImportQualifiedPost
                        LambdaCase
                        MultiParamTypeClasses
                        NamedFieldPuns

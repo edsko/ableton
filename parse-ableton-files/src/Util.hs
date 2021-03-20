@@ -14,10 +14,9 @@ module Util (
 import Control.Monad (guard)
 import Data.List (foldl', sortOn, intercalate)
 import Data.Map (Map)
+import Data.Map qualified as Map
 import Data.Set (Set)
-
-import qualified Data.Map as Map
-import qualified Data.Set as Set
+import Data.Set qualified as Set
 
 repeatedly :: (a -> b -> b) -> ([a] -> b -> b)
 repeatedly = flip . foldl' . flip

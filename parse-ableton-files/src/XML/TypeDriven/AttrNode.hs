@@ -4,9 +4,8 @@ import Data.String (fromString)
 import Data.Typeable
 import GHC.TypeLits
 
+import XML.Parser qualified as P
 import XML.TypeDriven.API
-
-import qualified XML.Parser as P
 
 -- | Node with a single attribute of the given type
 --

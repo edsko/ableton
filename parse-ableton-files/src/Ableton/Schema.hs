@@ -5,9 +5,8 @@ module Ableton.Schema where
 
 import Data.Data
 import Data.Text (Text)
-
-import qualified GHC.Generics as GHC
-import qualified Generics.SOP as SOP
+import GHC.Generics qualified as GHC
+import Generics.SOP qualified as SOP
 
 import XML.TypeDriven
 
