@@ -20,26 +20,29 @@ import Util.Interval.Split qualified as Split
 
 createLUTs :: [MSP] -> IO ()
 createLUTs msps = do
-    print luts
-    putStrLn $ "# Statistics"
-    putStrLn $ "Number of different sample ranges: " ++ show (Map.size sampleRanges)
-    putStrLn $ "## Distribution over the various ranges"
-    putStrLn $ "Unique combinations: " ++ show (product [
-                   Split.size splitSelector
-                 , Split.size splitKey
-                 , Split.size splitVelocity
-                 , Split.size splitChain
-                 ])
-    putStrLn $ "### Selector"
-    print    $ Set.size <$> splitSelector
-    putStrLn $ "### Key"
-    print    $ Set.size <$> splitKey
-    putStrLn $ "### Velocity"
-    print    $ Set.size <$> splitVelocity
-    putStrLn $ "### Articulation"
-    print    $ Set.size <$> splitChain
-    putStrLn $ "## Ambiguous combinations"
-    print    $ overlaps luts
+    writeFile "out/LUTs.log" $ show luts
+    writeFile "out/statistics.log" $ unlines [
+        "# Statistics"
+      , "Number of different sample ranges: " ++ show (Map.size sampleRanges)
+      , "## Distribution over the various ranges"
+      , "Unique combinations: " ++ show (product [
+            Split.size splitSelector
+          , Split.size splitKey
+          , Split.size splitVelocity
+          , Split.size splitChain
+          ])
+      , "### Selector"
+      , show $ Set.size <$> splitSelector
+      , "### Key"
+      , show $ Set.size <$> splitKey
+      , "### Velocity"
+      , show $ Set.size <$> splitVelocity
+      , "### Articulation"
+      , show $ Set.size <$> splitChain
+      , "## Ambiguous combinations"
+      , show $ overlaps luts
+      ]
+    writeFile "out/selector_range_id.table" (toRangeId $ Split.keysSet splitSelector)
   where
     luts :: LUTs
     luts@LUTs{..} = simplify $ repeatedly insert msps empty
@@ -180,3 +183,10 @@ overlaps LUTs{..} = [
               , overlapValues       = Set.toList intersection
               }
       ]
+
+{-------------------------------------------------------------------------------
+  Generate JavaScript
+-------------------------------------------------------------------------------}
+
+toRangeId :: Set (Interval Int) -> String
+toRangeId _ = "table"

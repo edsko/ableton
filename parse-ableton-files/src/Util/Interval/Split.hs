@@ -7,10 +7,12 @@ module Util.Interval.Split (
     -- * Query
   , size
   , toList
+  , keysSet
   ) where
 
 import Data.Map (Map)
 import Data.Map qualified as Map
+import Data.Set (Set)
 
 import Util.Interval (Interval)
 import Util.Interval qualified as I
@@ -24,14 +26,12 @@ import Util.Interval qualified as I
 newtype Split v a = Split { toMap :: Map (Interval v) a }
   deriving (Show, Functor)
 
+{-------------------------------------------------------------------------------
+  Construction
+-------------------------------------------------------------------------------}
+
 empty :: Split v a
 empty = Split Map.empty
-
-size :: Split v a -> Int
-size = Map.size . toMap
-
-toList :: Split v a -> [(Interval v, a)]
-toList = Map.toList . toMap
 
 modify ::
     (Ord v, Enum v)
@@ -55,6 +55,19 @@ mergeAdjacentIf f =
     go (x : y : zs)
       | Just xy' <- f x y = go (xy' : zs)
       | otherwise         = x : go (y : zs)
+
+{-------------------------------------------------------------------------------
+  Query
+-------------------------------------------------------------------------------}
+
+size :: Split v a -> Int
+size = Map.size . toMap
+
+toList :: Split v a -> [(Interval v, a)]
+toList = Map.toList . toMap
+
+keysSet :: Split v a -> Set (Interval v)
+keysSet = Map.keysSet . toMap
 
 {-------------------------------------------------------------------------------
   Auxiliary
