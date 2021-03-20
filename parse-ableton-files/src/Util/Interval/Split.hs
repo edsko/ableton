@@ -2,6 +2,7 @@ module Util.Interval.Split (
     Split
   , empty
   , modify
+  , size
   ) where
 
 import Data.Map (Map)
@@ -15,11 +16,14 @@ import Util.Interval
 --
 -- In order to preserve the invariant, we may have to split intervals when
 -- inserting new values into the map; hence the name.
-newtype Split v a = Split (Map (Interval v) a)
+newtype Split v a = Split { toMap :: Map (Interval v) a }
   deriving (Show, Functor)
 
 empty :: Split v a
 empty = Split Map.empty
+
+size :: Split v a -> Int
+size = Map.size . toMap
 
 modify ::
     (Ord v, Enum v)

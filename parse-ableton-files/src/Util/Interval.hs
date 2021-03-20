@@ -6,9 +6,10 @@ module Util.Interval (
   , Interval(..)
   , high
   , low
+  , point
   ) where
 
-import Data.IntervalMap.FingerTree (Interval(..), high, low)
+import Data.IntervalMap.FingerTree (Interval(..), high, low, point)
 import GHC.Stack
 
 -- | Check if two intervals overlap
