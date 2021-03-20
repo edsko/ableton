@@ -20,6 +20,7 @@ data Domain =
     Ableton
   | AbletonDevicePreset
   | BranchPresets
+  | BranchSelectorRange
   | Device
   | DevicePresets
   | FileRef
@@ -42,6 +43,7 @@ data Domain =
 deriving via ParseNode (Node Ableton)                instance Parse (Node Ableton)
 deriving via ParseNode (Node AbletonDevicePreset)    instance Parse (Node AbletonDevicePreset)
 deriving via ParseNode (Node BranchPresets)          instance Parse (Node BranchPresets)
+deriving via ParseNode (Node BranchSelectorRange)    instance Parse (Node BranchSelectorRange)
 deriving via ParseNode (Node Device)                 instance Parse (Node Device)
 deriving via ParseNode (Node DevicePresets)          instance Parse (Node DevicePresets)
 deriving via ParseNode (Node FileRef)                instance Parse (Node FileRef)
@@ -121,12 +123,32 @@ data instance Attrs InstrumentBranchPreset = Attrs_InstrumentBranchPreset {
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
 data instance Required InstrumentBranchPreset = Required_InstrumentBranchPreset {
-      name :: Name
+      name                :: Name
+    , branchSelectorRange :: Node BranchSelectorRange
     }
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
 data instance Optional InstrumentBranchPreset =
     InstrumentBranchPreset_DevicePresets (Node DevicePresets)
+  deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
+
+{-------------------------------------------------------------------------------
+  BranchSelectorRange
+-------------------------------------------------------------------------------}
+
+data instance Attrs BranchSelectorRange = Attrs_BranchSelectorRange {
+      -- No attributes
+    }
+  deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
+
+data instance Required BranchSelectorRange = Required_BranchSelectorRange {
+      min :: Min Int
+    , max :: Max Int
+    }
+  deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
+
+data instance Optional BranchSelectorRange
+    -- No optional children
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
 {-------------------------------------------------------------------------------

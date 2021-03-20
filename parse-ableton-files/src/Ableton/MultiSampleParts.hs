@@ -39,12 +39,13 @@ import XML.TypeDriven
 -------------------------------------------------------------------------------}
 
 data MSP = MSP {
-      chain    :: Name
-    , key      :: Interval MidiNote
-    , velocity :: Interval Int
-    , selector :: Interval Int
-    , sample   :: Name
-    , range    :: (SampleStart, SampleEnd)
+      chain      :: Name
+    , chainRange :: Interval Int
+    , key        :: Interval MidiNote
+    , velocity   :: Interval Int
+    , selector   :: Interval Int
+    , sample     :: Name
+    , range      :: (SampleStart, SampleEnd)
     }
   deriving (Show, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
@@ -245,15 +246,20 @@ allMSP = concatMap multiSampleParts . collect
 
 multiSampleParts :: Node InstrumentBranchPreset -> [MSP]
 multiSampleParts ibp =
-    map (mkMultiSamplePart name) (collect ibp)
+    map (mkMultiSamplePart name (Interval fr to)) (collect ibp)
   where
     Node{required = Required_InstrumentBranchPreset{
         name
+      , branchSelectorRange = Node{required = Required_BranchSelectorRange {
+            min = Min fr
+          , max = Max to
+          }}
       }} = ibp
 
-mkMultiSamplePart :: Name -> Node MultiSamplePart -> MSP
-mkMultiSamplePart chain msp = MSP {
+mkMultiSamplePart :: Name -> Interval Int -> Node MultiSamplePart -> MSP
+mkMultiSamplePart chain chainRange msp = MSP {
       chain
+    , chainRange
     , key      = Interval keyRangeMin keyRangeMax
     , velocity = Interval velocityMin velocityMax
     , selector = Interval selectorMin selectorMax

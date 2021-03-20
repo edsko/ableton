@@ -28,7 +28,7 @@ createLUTs msps = do
                    Split.size splitSelector
                  , Split.size splitKey
                  , Split.size splitVelocity
-                 , Split.size splitArticulation
+                 , Split.size splitChain
                  ])
     putStrLn $ "### Selector"
     print    $ Set.size <$> splitSelector
@@ -37,7 +37,7 @@ createLUTs msps = do
     putStrLn $ "### Velocity"
     print    $ Set.size <$> splitVelocity
     putStrLn $ "### Articulation"
-    print    $ Set.size <$> splitArticulation
+    print    $ Set.size <$> splitChain
     putStrLn $ "## Ambiguous combinations"
     print    $ overlaps luts
   where
@@ -47,9 +47,6 @@ createLUTs msps = do
 data LUTs = LUTs {
       -- | Unique ID assigned to each sample range
       sampleRanges :: Map SampleRange SampleRangeId
-
-      -- | Range assigned to each chain (for articulation)
-    , chainRanges :: Map Name (Interval Int)
 
       -- | Split (non-overlapping) selector ranges
     , splitSelector :: Split Int (Set SampleRangeId)
@@ -61,7 +58,7 @@ data LUTs = LUTs {
     , splitVelocity :: Split Int (Set SampleRangeId)
 
       -- | Split articulation ranges
-    , splitArticulation :: Split Int (Set SampleRangeId)
+    , splitChain :: Split Int (Set SampleRangeId)
 
       -- | All unique sample ranges in the original data
     , uniqueSelector :: Set (Interval Int)
@@ -73,7 +70,7 @@ data LUTs = LUTs {
     , uniqueVelocity :: Set (Interval Int)
 
       -- | All unique articulatiomn ranges
-    , uniqueArticulation :: Set (Interval Int)
+    , uniqueChain :: Set (Name, Interval Int)
     }
   deriving (Show)
 
@@ -88,38 +85,30 @@ data SampleRange = SampleRange {
 
 empty :: LUTs
 empty = LUTs {
-      sampleRanges       = Map.empty
-    , chainRanges        = Map.empty
-    , splitSelector      = Split.empty
-    , splitKey           = Split.empty
-    , splitVelocity      = Split.empty
-    , splitArticulation  = Split.empty
-    , uniqueSelector     = Set.empty
-    , uniqueKey          = Set.empty
-    , uniqueVelocity     = Set.empty
-    , uniqueArticulation = Set.empty
+      sampleRanges   = Map.empty
+    , splitSelector  = Split.empty
+    , splitKey       = Split.empty
+    , splitVelocity  = Split.empty
+    , splitChain     = Split.empty
+    , uniqueSelector = Set.empty
+    , uniqueKey      = Set.empty
+    , uniqueVelocity = Set.empty
+    , uniqueChain    = Set.empty
     }
 
 insert :: MSP -> LUTs -> LUTs
 insert MSP{..} LUTs{..} = LUTs{
       sampleRanges       = Map.insert sampleRange sampleRangeId sampleRanges
-    , chainRanges        = Map.insert chain articulation chainRanges
     , splitSelector      = modifySplit selector     splitSelector
     , splitKey           = modifySplit key          splitKey
     , splitVelocity      = modifySplit velocity     splitVelocity
-    , splitArticulation  = modifySplit articulation splitArticulation
-    , uniqueSelector     = Set.insert selector     uniqueSelector
-    , uniqueKey          = Set.insert key          uniqueKey
-    , uniqueVelocity     = Set.insert velocity     uniqueVelocity
-    , uniqueArticulation = Set.insert articulation uniqueArticulation
+    , splitChain         = modifySplit chainRange   splitChain
+    , uniqueSelector     = Set.insert selector            uniqueSelector
+    , uniqueKey          = Set.insert key                 uniqueKey
+    , uniqueVelocity     = Set.insert velocity            uniqueVelocity
+    , uniqueChain        = Set.insert (chain, chainRange) uniqueChain
     }
   where
-    articulation :: Interval Int
-    articulation =
-        case Map.lookup chain chainRanges of
-          Just i  -> i
-          Nothing -> I.point (Map.size chainRanges)
-
     modifySplit ::
          (Ord v, Enum v)
       => Interval v
@@ -144,10 +133,10 @@ simplify = mergeIdentical
 
 mergeIdentical :: LUTs -> LUTs
 mergeIdentical LUTs{..} = LUTs{
-      splitSelector     = merge splitSelector
-    , splitKey          = merge splitKey
-    , splitVelocity     = merge splitVelocity
-    , splitArticulation = merge splitArticulation
+      splitSelector = merge splitSelector
+    , splitKey      = merge splitKey
+    , splitVelocity = merge splitVelocity
+    , splitChain    = merge splitChain
     , ..
     }
   where
@@ -172,22 +161,22 @@ data Overlap a = Overlap {
 overlaps :: LUTs -> [Overlap SampleRangeId]
 overlaps LUTs{..} = [
         overlap
-      | (selector,     samplesForSelector)     <- Split.toList splitSelector
-      , (key,          samplesForKey)          <- Split.toList splitKey
-      , (velocity,     samplesForVelocity)     <- Split.toList splitVelocity
-      , (articulation, samplesForArticulation) <- Split.toList splitArticulation
+      | (selector, samplesForSelector) <- Split.toList splitSelector
+      , (key,      samplesForKey)      <- Split.toList splitKey
+      , (velocity, samplesForVelocity) <- Split.toList splitVelocity
+      , (chain,    samplesForChain)    <- Split.toList splitChain
       , let intersection = foldr1 Set.intersection [
                 samplesForSelector
               , samplesForKey
               , samplesForVelocity
-              , samplesForArticulation
+              , samplesForChain
               ]
       , Set.size intersection > 1
       , let overlap = Overlap {
                 overlapSelector     = selector
               , overlapKey          = key
               , overlapVelocity     = velocity
-              , overlapArticulation = articulation
+              , overlapArticulation = chain
               , overlapValues       = Set.toList intersection
               }
       ]
