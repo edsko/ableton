@@ -39,7 +39,7 @@ import XML.TypeDriven
 
 data MSP = MSP {
       chain    :: Name
-    , key      :: (MidiNote, MidiNote)
+    , key      :: Interval MidiNote
     , velocity :: Interval Int
     , selector :: Interval Int
     , sample   :: Name
@@ -60,7 +60,7 @@ type PerOffset a = IntervalMap Int a
 
 data InvMSP = InvMSP {
       chain    :: Name
-    , key      :: (MidiNote, MidiNote)
+    , key      :: Interval MidiNote
     , velocity :: Interval Int
     , selector :: Interval Int
     }
@@ -116,10 +116,10 @@ statsMSP msps = InvStats {
     checkOverlap (i:i':is) = intersects i i' || checkOverlap (i':is)
 
     isNonSingletonKey :: InvMSP -> Bool
-    isNonSingletonKey InvMSP{key = (fr, to)} = fr /= to
+    isNonSingletonKey InvMSP{key = Interval fr to} = fr /= to
 
     sampleKeyRanges :: InvMSP -> [MidiNote]
-    sampleKeyRanges InvMSP{key = (fr, to)} = [fr .. to]
+    sampleKeyRanges InvMSP{key = Interval fr to} = [fr .. to]
 
 {-------------------------------------------------------------------------------
   Summarize
@@ -210,7 +210,7 @@ summariseMSP OptionsSummarise{..} = \msps ->
         chainsCombined = Name $ showSet getName chains
 
     expand :: InvMSP -> (MidiNote, (Name, (Interval Int, Interval Int)))
-    expand InvMSP{key = (n, n'), ..}
+    expand InvMSP{key = Interval n n', ..}
       | n == n'   = (n, (chain, (velocity, selector)))
       | otherwise = error "expand: non-singleton key range"
 
@@ -253,7 +253,7 @@ multiSampleParts ibp =
 mkMultiSamplePart :: Name -> Node MultiSamplePart -> MSP
 mkMultiSamplePart chain msp = MSP {
       chain
-    , key      = (keyRangeMin, keyRangeMax)
+    , key      = Interval keyRangeMin keyRangeMax
     , velocity = Interval velocityMin velocityMax
     , selector = Interval selectorMin selectorMax
     , sample   = fileRefName
