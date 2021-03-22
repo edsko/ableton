@@ -9,7 +9,7 @@ import Data.Set (Set)
 import Data.Set qualified as Set
 
 import Ableton.MultiSampleParts
-import Ableton.Schema (Name, SampleStart, SampleEnd)
+import Ableton.Schema (Name)
 import Ableton.Types
 
 import Util
@@ -64,7 +64,7 @@ createLUTs msps = do
 
 data LUTs = LUTs {
       -- | Unique ID assigned to each sample range
-      sampleIds :: Map SampleRange SampleId
+      sampleIds :: Map Sample SampleId
 
       -- | Split (non-overlapping) selector ranges
     , splitSelector :: Split Int (Set SampleId)
@@ -95,12 +95,6 @@ data LUTs = LUTs {
 newtype SampleId = SampleId Int
   deriving newtype (Show, Eq, Ord)
 
-data SampleRange = SampleRange {
-      sample   :: Name
-    , range    :: (SampleStart, SampleEnd)
-    }
-  deriving (Show, Eq, Ord)
-
 empty :: LUTs
 empty = LUTs {
       sampleIds      = Map.empty
@@ -116,7 +110,7 @@ empty = LUTs {
 
 insert :: MSP -> LUTs -> LUTs
 insert MSP{..} LUTs{..} = LUTs{
-      sampleIds      = Map.insert sampleRange sampleId sampleIds
+      sampleIds      = Map.insert sample sampleId sampleIds
     , splitSelector  = modifySplit selector   splitSelector
     , splitKey       = modifySplit key        splitKey
     , splitVelocity  = modifySplit velocity   splitVelocity
@@ -133,12 +127,9 @@ insert MSP{..} LUTs{..} = LUTs{
       -> Split v (Set SampleId) -> Split v (Set SampleId)
     modifySplit = Split.modify Set.empty (Set.insert sampleId)
 
-    sampleRange :: SampleRange
-    sampleRange = SampleRange { sample = sample, range = range }
-
     sampleId :: SampleId
     sampleId =
-        case Map.lookup sampleRange sampleIds of
+        case Map.lookup sample sampleIds of
           Nothing -> SampleId $ Map.size sampleIds
           Just id -> id
 

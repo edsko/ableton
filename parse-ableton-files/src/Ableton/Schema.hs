@@ -290,6 +290,7 @@ data instance Required MultiSamplePart = Required_MultiSamplePart {
       keyRange      :: Node KeyRange
     , velocityRange :: Node VelocityRange
     , selectorRange :: Node SelectorRange
+    , volume        :: Volume
     , sampleStart   :: SampleStart
     , sampleEnd     :: SampleEnd
     , sampleRef     :: Node SampleRef
@@ -410,6 +411,10 @@ newtype Min a = Min { getMin :: a }
 newtype Max a = Max { getMax :: a }
   deriving stock (Show, Eq, Ord, Data)
   deriving Parse via AttrNode "Max" "Value" a
+
+newtype Volume = Volume { getVolume :: Double }
+  deriving stock (Show, Eq, Ord, Data)
+  deriving Parse via AttrNode "Volume" "Value" Double
 
 newtype SampleStart = SampleStart { getSampleStart :: Int }
   deriving stock (Show, Eq, Ord, Data)

@@ -38,3 +38,6 @@ instance ParseAttr String where
 
 instance ParseAttr Int where
   parseAttr = attrRead
+
+instance ParseAttr Double where
+  parseAttr = attrRead

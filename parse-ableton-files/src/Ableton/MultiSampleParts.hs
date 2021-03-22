@@ -5,6 +5,7 @@
 -- This is useful to analyse an xisting Sampler instance.
 module Ableton.MultiSampleParts (
     MSP(..)
+  , Sample(..)
   , allMSP
   , invertMSP
   , statsMSP
@@ -44,10 +45,16 @@ data MSP = MSP {
     , key        :: Interval MidiNote
     , velocity   :: Interval Int
     , selector   :: Interval Int
-    , sample     :: Name
-    , range      :: (SampleStart, SampleEnd)
+    , sample     :: Sample
     }
-  deriving (Show, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
+  deriving (Show)
+
+data Sample = Sample {
+      file   :: Name
+    , range  :: (SampleStart, SampleEnd)
+    , volume :: Volume
+    }
+  deriving (Show, Eq, Ord)
 
 {-------------------------------------------------------------------------------
   Auxiliary
@@ -72,8 +79,8 @@ invertMSP :: [MSP] -> PerSample (PerOffset [InvMSP])
 invertMSP =
       Map.fromList
     . map (second (IM.fromList . mergeAdjacent . splitFst))
-    . splitOn (\MSP{..} -> (sample, (interval range, InvMSP{..})))
-    . sortOn (\MSP{..} -> (sample, range))
+    . splitOn (\MSP{sample = Sample{..}, ..} -> (file, (interval range, InvMSP{..})))
+    . sortOn (\MSP{sample = Sample{..}} -> (file, range))
   where
     interval :: (SampleStart, SampleEnd) -> Interval Int
     interval (SampleStart fr, SampleEnd to) = Interval fr to
@@ -263,14 +270,18 @@ mkMultiSamplePart chain chainRange msp = MSP {
     , key      = Interval keyRangeMin keyRangeMax
     , velocity = Interval velocityMin velocityMax
     , selector = Interval selectorMin selectorMax
-    , sample   = fileRefName
-    , range    = (sampleStart, sampleEnd)
+    , sample   = Sample {
+          file   = fileRefName
+        , range  = (sampleStart, sampleEnd)
+        , volume = volume
+        }
     }
   where
     Node{required = Required_MultiSamplePart{
         keyRange
       , velocityRange
       , selectorRange
+      , volume
       , sampleStart
       , sampleEnd
       , sampleRef
