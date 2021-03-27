@@ -3,13 +3,16 @@ module LUTs (createLUTs) where
 import Prelude hiding (id)
 
 import Control.Monad
+import Data.Char (toLower)
+import Data.List (sortOn, nub)
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
+import Data.Tuple (swap)
 
 import Ableton.MultiSampleParts
-import Ableton.Schema (Name)
+import Ableton.Schema
 import Ableton.Types
 
 import Util
@@ -25,6 +28,8 @@ createLUTs msps = do
     writeFile "out/statistics.log" $ unlines [
         "# Statistics"
       , "Number of different sample ranges: " ++ show (Map.size sampleIds)
+      , "## Sample files used"
+      , unlines (nub . map (getName . file . fst) . sortOn snd . Map.toList $ sampleIds)
       , "## Distribution over the various ranges"
       , "Unique combinations: " ++ show (product [
             Split.size splitSelector
@@ -55,6 +60,9 @@ createLUTs msps = do
     writeFile "out/samples_key.coll"      (matchingRangeId rangesKey      splitKey)
     writeFile "out/samples_velocity.coll" (matchingRangeId rangesVelocity splitVelocity)
     writeFile "out/samples_chain.coll"    (matchingRangeId rangesChain    splitChain)
+
+    -- Samples themselves
+    writeFile "out/samples.coll" (sampleLUT sampleIds)
   where
     luts :: LUTs
     luts@LUTs{..} = simplify $ repeatedly insert msps empty
@@ -127,10 +135,11 @@ insert MSP{..} LUTs{..} = LUTs{
       -> Split v (Set SampleId) -> Split v (Set SampleId)
     modifySplit = Split.modify Set.empty (Set.insert sampleId)
 
+    -- Reserve ID 0 for "not found"
     sampleId :: SampleId
     sampleId =
         case Map.lookup sample sampleIds of
-          Nothing -> SampleId $ Map.size sampleIds
+          Nothing -> SampleId $ (Map.size sampleIds + 1)
           Just id -> id
 
 {-------------------------------------------------------------------------------
@@ -234,7 +243,7 @@ overlaps LUTs{..} = [
       ]
 
 {-------------------------------------------------------------------------------
-  Generate JavaScript
+  Generate LUTs
 -------------------------------------------------------------------------------}
 
 toRangeId :: forall a id.
@@ -264,3 +273,41 @@ matchingRangeId ids ranges = unlines [
     | (i, id) <- Map.toList ids
     , Just samples <- [Split.lookup i ranges]
     ]
+
+-- | LUT for the samples themselves
+--
+-- We output these as
+--
+-- > <sample ID, <start> <end> <volume> <sample>;
+--
+-- This ordering is most useful in the @ks-sampler-core@:
+--
+-- 1. Set volume
+-- 2. Set @play~@ sample buffer
+-- 3. Issue play command
+sampleLUT :: Map Sample SampleId -> String
+sampleLUT = unlines . map (uncurry aux) . sortOn fst . map swap . Map.toList
+  where
+    aux :: SampleId -> Sample -> String
+    aux sid Sample{
+                file   = Name n
+              , range  = (SampleStart fr, SampleEnd to)
+              , volume = Volume v
+              } = concat [
+          show sid
+        , ", "
+        , show fr
+        , " "
+        , show to
+        , " "
+        , fileToSymbol n
+        , " "
+        , show v
+        , ";"
+        ]
+
+    fileToSymbol :: String -> String
+    fileToSymbol =
+         map (\x -> if x `elem` " -" then '_' else x)
+       . takeWhile (/= '.') -- drop the extension
+       . map toLower
