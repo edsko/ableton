@@ -15,14 +15,16 @@ import Ableton.MultiSampleParts
 import Ableton.Schema
 import Ableton.Types
 
+import CmdLine
+
 import Util
 import Util.Interval (Interval)
 import Util.Interval qualified as I
 import Util.Interval.Split (Split)
 import Util.Interval.Split qualified as Split
 
-createLUTs :: [MSP] -> IO ()
-createLUTs msps = do
+createLUTs :: OptionsCreateLUTs -> [MSP] -> IO ()
+createLUTs OptionsCreateLUTs{sampleRate} msps = do
     writeFile "out/LUTs.log" $ show luts
     writeFile "out/rangeIDs.log" $ show rangeIds
     writeFile "out/statistics.log" $ unlines [
@@ -62,7 +64,7 @@ createLUTs msps = do
     writeFile "out/samples_chain.coll"    (matchingRangeId rangesChain    splitChain)
 
     -- Samples themselves
-    writeFile "out/samples.coll" (sampleLUT sampleIds)
+    writeFile "out/samples.coll" (sampleLUT sampleRate sampleIds)
   where
     luts :: LUTs
     luts@LUTs{..} = simplify $ repeatedly insert msps empty
@@ -285,8 +287,9 @@ matchingRangeId ids ranges = unlines [
 -- 1. Set volume
 -- 2. Set @play~@ sample buffer
 -- 3. Issue play command
-sampleLUT :: Map Sample SampleId -> String
-sampleLUT = unlines . map (uncurry aux) . sortOn fst . map swap . Map.toList
+sampleLUT :: Double -> Map Sample SampleId -> String
+sampleLUT sampleRate =
+    unlines . map (uncurry aux) . sortOn fst . map swap . Map.toList
   where
     aux :: SampleId -> Sample -> String
     aux sid Sample{
@@ -296,9 +299,9 @@ sampleLUT = unlines . map (uncurry aux) . sortOn fst . map swap . Map.toList
               } = concat [
           show sid
         , ", "
-        , show fr
+        , show (fromIntegral fr / sampleRate * 1_000)
         , " "
-        , show to
+        , show (fromIntegral to / sampleRate * 1_000)
         , " "
         , fileToSymbol n
         , " "

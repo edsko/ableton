@@ -1,6 +1,7 @@
 module CmdLine (
     Options(..)
   , OptionsSummarise(..)
+  , OptionsCreateLUTs(..)
   , Command(..)
   , getOptions
   ) where
@@ -27,12 +28,20 @@ data Command =
   | SummariseMSP OptionsSummarise
 
     -- | Create LUTs for use in ks-sampler
-  | CreateLUTs
+  | CreateLUTs OptionsCreateLUTs
   deriving (Show)
 
 data OptionsSummarise = OptionsSummarise {
       -- | Collate overlapping velocity ranges (provided they have disjoint selectors)
       optCollateVelocities :: Bool
+    }
+  deriving (Show)
+
+data OptionsCreateLUTs = OptionsCreateLUTs {
+      -- | Sample rate
+      --
+      -- Required to able to able convert offsets to @ms@.
+      sampleRate :: Double
     }
   deriving (Show)
 
@@ -56,21 +65,29 @@ parseOptions = Options
 
 parseCommand :: Parser Command
 parseCommand = subparser $ mconcat [
-      aux "dump-parsed"   (pure DumpParsed)                        "Dump parsed XML"
-    , aux "show-msp"      (pure ShowMSP)                           "Show all multi-sample parts"
-    , aux "invert-msp"    (pure InvertMSP)                         "Show mapping from sample range to multi-sample settings"
-    , aux "summarise-msp" (SummariseMSP <$> parseOptionsSummarise) "Summarise multi-sample parts"
-    , aux "create-luts"   (pure CreateLUTs)                        "Create LUTs for use in ks-sampler"
+      aux "dump-parsed"   (pure DumpParsed)                         "Dump parsed XML"
+    , aux "show-msp"      (pure ShowMSP)                            "Show all multi-sample parts"
+    , aux "invert-msp"    (pure InvertMSP)                          "Show mapping from sample range to multi-sample settings"
+    , aux "summarise-msp" (SummariseMSP <$> parseOptionsSummarise)  "Summarise multi-sample parts"
+    , aux "create-luts"   (CreateLUTs   <$> parseOptionsCreateLUTs) "Create LUTs for use in ks-sampler"
     ]
   where
     aux :: String -> Parser Command -> String -> Mod CommandFields Command
     aux c p h = command c $ info (p <**> helper) $ mconcat [
           progDesc h
         ]
-
 parseOptionsSummarise :: Parser OptionsSummarise
 parseOptionsSummarise = OptionsSummarise
     <$> (switch $ mconcat [
              long "collate-velocities"
            , help "Collate overlapping velocity ranges (provided they have disjoint selector ranges)"
+           ])
+
+parseOptionsCreateLUTs :: Parser OptionsCreateLUTs
+parseOptionsCreateLUTs = OptionsCreateLUTs
+    <$> (option auto $ mconcat [
+             long "sample-rate"
+           , help "Sample rate (to convert offsets to ms)"
+           , showDefault
+           , value 44100
            ])

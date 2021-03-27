@@ -35,5 +35,5 @@ main = do
           SummariseMSP options -> do
             let inverted = invertMSP $ allMSP parsed
             print $ summariseMSP options inverted
-          CreateLUTs ->
-            createLUTs (allMSP parsed)
+          CreateLUTs options ->
+            createLUTs options (allMSP parsed)

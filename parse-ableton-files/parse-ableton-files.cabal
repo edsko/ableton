@@ -62,6 +62,7 @@ executable parse-ableton
                        LambdaCase
                        MultiParamTypeClasses
                        NamedFieldPuns
+                       NumericUnderscores
                        PolyKinds
                        RecordWildCards
                        ScopedTypeVariables
