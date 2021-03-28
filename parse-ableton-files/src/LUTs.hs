@@ -4,7 +4,7 @@ import Prelude hiding (id)
 
 import Control.Monad
 import Data.Char (toLower)
-import Data.List (sortOn, nub)
+import Data.List (sortOn, sort, nub)
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Set (Set)
@@ -31,7 +31,13 @@ createLUTs OptionsCreateLUTs{sampleRate} msps = do
         "# Statistics"
       , "Number of different sample ranges: " ++ show (Map.size sampleIds)
       , "## Sample files used"
-      , unlines (nub . map (getName . file . fst) . sortOn snd . Map.toList $ sampleIds)
+      ,   unlines
+        . map (\f -> f ++ " (" ++ fileToSymbol f ++ ")")
+        . nub
+        . sort
+        . map (getName . file . fst)
+        . Map.toList
+        $ sampleIds
       , "## Distribution over the various ranges"
       , "Unique combinations: " ++ show (product [
             Split.size splitSelector
@@ -309,8 +315,8 @@ sampleLUT sampleRate =
         , ";"
         ]
 
-    fileToSymbol :: String -> String
-    fileToSymbol =
-         map (\x -> if x `elem` " -" then '_' else x)
-       . takeWhile (/= '.') -- drop the extension
-       . map toLower
+fileToSymbol :: String -> String
+fileToSymbol =
+     map (\x -> if x `elem` " -" then '_' else x)
+   . takeWhile (/= '.') -- drop the extension
+   . map toLower
