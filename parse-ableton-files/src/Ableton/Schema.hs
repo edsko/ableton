@@ -388,7 +388,7 @@ data instance Attrs FileRef = Attrs_FileRef {
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
 data instance Required FileRef = Required_FileRef {
-      name :: Name
+      relativePath :: RelativePath
     }
   deriving (Show, Data, GHC.Generic, SOP.Generic, SOP.HasDatatypeInfo)
 
@@ -423,3 +423,7 @@ newtype SampleStart = SampleStart { getSampleStart :: Int }
 newtype SampleEnd = SampleEnd { getSampleEnd :: Int }
   deriving stock (Show, Eq, Ord, Data)
   deriving Parse via AttrNode "SampleEnd" "Value" Int
+
+newtype RelativePath = RelativePath { getRelativePath :: String }
+  deriving stock (Show, Eq, Ord, Data)
+  deriving Parse via AttrNode "RelativePath" "Value" String

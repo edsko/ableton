@@ -24,6 +24,7 @@ import Data.Set (Set)
 import Data.Set qualified as Set
 import GHC.Generics qualified as GHC
 import Generics.SOP qualified as SOP
+import System.FilePath (takeFileName)
 
 import Ableton.Schema
 import Ableton.Types
@@ -271,7 +272,7 @@ mkMultiSamplePart chain chainRange msp = MSP {
     , velocity = Interval velocityMin velocityMax
     , selector = Interval selectorMin selectorMax
     , sample   = Sample {
-          file   = fileRefName
+          file   = Name $ takeFileName relativePath
         , range  = (sampleStart, sampleEnd)
         , volume = volume
         }
@@ -307,5 +308,5 @@ mkMultiSamplePart chain chainRange msp = MSP {
       }} = sampleRef
 
     Node{required = Required_FileRef{
-        name = fileRefName
+        relativePath = RelativePath relativePath
       }} = fileRef

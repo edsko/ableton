@@ -30,6 +30,7 @@ executable parse-ableton
                      , conduit-extra
                      , containers
                      , exceptions
+                     , filepath
                      , fingertree
                      , generics-sop
                      , mtl
