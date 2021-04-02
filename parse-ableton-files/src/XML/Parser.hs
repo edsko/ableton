@@ -4,6 +4,10 @@
 module XML.Parser (
     Parser -- opaque
   , runParser
+    -- * Context
+  , Context
+  , getContext
+  , withContext  
     -- * Construction
   , tag'
     -- * Combinators
@@ -15,6 +19,7 @@ module XML.Parser (
 
 import Prelude hiding (maybe)
 
+import Control.Monad.Reader
 import Conduit
 import Data.Typeable
 import Data.XML.Types
@@ -23,8 +28,18 @@ import Data.String (fromString)
 import Text.XML.Stream.Parse (AttrParser, NameMatcher)
 import Text.XML.Stream.Parse qualified as X
 
-newtype Parser a = Parser { runParser :: ConduitT Event Void IO a }
+newtype Parser a = Parser {
+      runParser :: ConduitT Event Void (ReaderT Context IO) a
+    }
   deriving newtype (Functor, Applicative, Monad, MonadThrow)
+
+type Context = [String]
+
+getContext :: Parser Context
+getContext = Parser $ lift $ ask
+
+withContext :: (Context -> Context) -> Parser a -> Parser a
+withContext f (Parser p) = Parser $ transPipe (local f) p
 
 {-------------------------------------------------------------------------------
   Construction

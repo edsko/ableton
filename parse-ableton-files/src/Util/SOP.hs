@@ -19,6 +19,7 @@ import Control.Exception (Exception)
 import Control.Monad.Catch (MonadThrow(..))
 import Data.Kind
 import Data.SOP.Dict
+import Data.Typeable
 import Generics.SOP
 
 {-------------------------------------------------------------------------------
@@ -88,19 +89,21 @@ instance SListI (Single (Code a)) => Semigroup (Partial a) where
 instance SListI (Single (Code a)) => Monoid (Partial a) where
   mempty = Partial $ hpure []
 
-data InvalidValue =
-    MissingValue FieldName
-  | MultipleValues FieldName
+data InvalidValue ctxt =
+    MissingValue   ctxt FieldName
+  | MultipleValues ctxt FieldName
   deriving (Show, Exception)
 
-complete :: forall m a req.
+complete :: forall m a req ctxt.
      ( SListI (Single (Code a))
      , HasDatatypeInfo a
      , Code a ~ '[ req ]
      , MonadThrow m
+     , Typeable ctxt
+     , Show ctxt
      )
-  => [Partial a] -> m a
-complete =
+  => ctxt -> [Partial a] -> m a
+complete ctxt =
       fmap (to . SOP . Z)
     . hsequence
     . hzipWith verify (fieldInfo (Proxy @a))
@@ -110,5 +113,5 @@ complete =
     verify :: FieldInfo x -> [x] -> m x
     verify (FieldInfo n) = \case
         [x] -> return x
-        []  -> throwM $ MissingValue   n
-        _   -> throwM $ MultipleValues n
+        []  -> throwM $ MissingValue   ctxt n
+        _   -> throwM $ MultipleValues ctxt n

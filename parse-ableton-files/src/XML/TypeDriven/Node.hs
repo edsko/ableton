@@ -87,7 +87,10 @@ instance (
           P.tag'
             nodeName
             (parseAttrs p)
-            (\attrs -> mkNode attrs =<< P.many' parseChild)
+            (\attrs -> P.withContext (nodeName :) $ do
+               children <- P.many' parseChild
+               mkNode attrs children
+            )
         where
           nodeName :: String
           nodeName = case show (typeRep p) of
@@ -102,7 +105,8 @@ instance (
 
           mkNode :: Attrs a -> [Child a] -> Parser (Node a)
           mkNode attrs children = do
-              required <- complete required'
+              ctxt     <- P.getContext
+              required <- complete ctxt required'
               return $ Node {..}
             where
               required' :: [Partial (Required a)]

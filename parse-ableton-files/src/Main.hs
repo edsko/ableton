@@ -1,6 +1,7 @@
 module Main where
 
 import Conduit
+import Control.Monad.Reader
 import Data.Conduit.Zlib (ungzip)
 import Text.XML.Stream.Parse
 
@@ -18,7 +19,7 @@ main = do
                         inp
                      .| ungzip
                      .| parseBytes def
-                     .| P.runParser parse
+                     .| (transPipe (flip runReaderT []) $ P.runParser parse)
     case mParsed of
       Nothing ->
         putStrLn "XML failed to parse"
